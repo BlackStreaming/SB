@@ -256,14 +256,7 @@ const HomePage = () => {
               <h2 style={styles.sectionTitle}><FiGrid size={32} /> Categorías</h2>
               <p style={styles.sectionSubtitle}>Encuentra lo que necesitas</p>
             </div>
-            <Link
-              to="/categorias"
-              style={{ ...styles.viewAllButton, ...(hoverStates.viewAllCategories && styles.viewAllButtonHover) }}
-              onMouseEnter={() => handleHover('viewAllCategories', true)}
-              onMouseLeave={() => handleHover('viewAllCategories', false)}
-            >
-              <div style={{ ...styles.buttonGlow, ...(hoverStates.viewAllCategories && styles.buttonGlowHover) }} />
-            </Link>
+            
           </div>
           
           <div className="custom-grid">
@@ -286,15 +279,7 @@ const HomePage = () => {
               <h2 style={styles.sectionTitle}><FiStar size={32} /> Destacados</h2>
               <p style={styles.sectionSubtitle}>Lo mejor valorado por nuestros clientes</p>
             </div>
-            <Link
-              to="/productos"
-              style={{ ...styles.viewAllButton, ...(hoverStates.viewAllProducts && styles.viewAllButtonHover) }}
-              onMouseEnter={() => handleHover('viewAllProducts', true)}
-              onMouseLeave={() => handleHover('viewAllProducts', false)}
-            >
-              <div style={{ ...styles.buttonGlow, ...(hoverStates.viewAllProducts && styles.buttonGlowHover) }} />
-              <span>Ver todos</span> <FiArrowRight size={18} />
-            </Link>
+            
           </div>
           
           <div className="custom-grid">
@@ -317,14 +302,7 @@ const HomePage = () => {
               <h2 style={styles.sectionTitle}><FiTrendingUp size={32} /> Tendencias</h2>
               <p style={styles.sectionSubtitle}>Lo más popular de la semana</p>
             </div>
-            <Link
-              to="/tendencias"
-              style={{ ...styles.viewAllButton, ...(hoverStates.viewAllTrending && styles.viewAllButtonHover) }}
-              onMouseEnter={() => handleHover('viewAllTrending', true)}
-              onMouseLeave={() => handleHover('viewAllTrending', false)}
-            >
-              <div style={{ ...styles.buttonGlow, ...(hoverStates.viewAllTrending && styles.buttonGlowHover) }} />
-            </Link>
+            
           </div>
           
           <div className="custom-grid">
