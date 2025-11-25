@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  FiDollarSign, 
-  FiShoppingBag, 
-  FiGift, 
-  FiAward, 
-  FiStar,
-  FiMenu,
-  FiLogOut,
-  FiLock,
-  FiShare2, // Icono para Código de Referido
-  FiTrendingUp, // Icono VIP
-  FiTarget      // Icono Diamante
+    FiDollarSign, 
+    FiShoppingBag, 
+    FiGift, 
+    FiAward, 
+    FiStar,
+    FiMenu,
+    FiLogOut,
+    FiLock,
+    FiShare2, // Icono para Código de Referido
+    FiTrendingUp, // Icono VIP
+    FiTarget      // Icono Diamante
 } from 'react-icons/fi';
 
 // Importa el contexto de autenticación
 import { useAuth } from '/src/context/AuthContext';
+
+// 🛑 SOLUCIÓN DEL LOGO: Importamos la imagen como un módulo (Ajustar ruta si es necesario)
+// Si AffiliatorDashboard.jsx está en src/components/layout/, la ruta es:
+import LogoBlack from '../images/BLACK.png'; 
 
 import RechargePage from '../features/dashboard/UserDashboard/RechargePage.jsx';
 import OrderHistory from '../features/dashboard/UserDashboard/OrderHistory.jsx';
@@ -30,149 +34,149 @@ import AffiliateDashboard from '../features/dashboard/AffiliateDashboard/Affilia
 
 // --- ESTILOS (Mismos del UserDashboard) ---
 const styles = {
-  layout: {
-    display: 'flex',
-    minHeight: '100vh',
-    fontFamily: "'Inter', sans-serif",
-    background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
-    position: 'relative',
-    overflow: 'hidden'
-  },
-  backgroundDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'radial-gradient(circle at 80% 20%, rgba(0, 191, 255, 0.08) 0%, transparent 50%)',
-    zIndex: 0
-  },
-  sidebar: {
-    width: '280px',
-    background: 'rgba(25, 25, 25, 0.95)',
-    backdropFilter: 'blur(20px)',
-    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '32px 0',
-    flexShrink: 0,
-    height: '100vh',
-    zIndex: 50,
-    transition: 'transform 0.3s ease-in-out',
-  },
-  sidebarMobile: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    height: '100vh',
-    width: '280px',
-    transform: 'translateX(-100%)',
-    zIndex: 1000,
-    boxShadow: '4px 0 15px rgba(0,0,0,0.5)'
-  },
-  sidebarOpen: { transform: 'translateX(0)' },
-  overlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(3px)',
-    zIndex: 999
-  },
-  sidebarHeader: {
-    padding: '0 24px 20px 24px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-    marginBottom: '20px',
-    textAlign: 'center'
-  },
-  logoContainer: { display: 'block', marginBottom: '10px', textDecoration: 'none' },
-  logoImage: { maxWidth: '140px', height: 'auto', display: 'block', margin: '0 auto' },
-  subtitle: { fontSize: '0.8rem', color: '#00BFFF', marginTop: '8px', fontWeight: '600', letterSpacing: '1px' },
-  navContainer: {
-      flex: 1,
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-      padding: '0 16px'
-  },
-  footerContainer: { padding: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: 'auto' },
-  link: {
-    padding: '14px 20px',
-    textDecoration: 'none',
-    color: '#a0a0a0',
-    fontSize: '0.95rem',
-    fontWeight: '500',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    borderRadius: '12px',
-    transition: 'all 0.3s ease',
-    position: 'relative',
-    overflow: 'hidden',
-    cursor: 'pointer'
-  },
-  linkActive: {
-    background: 'linear-gradient(135deg, rgba(0, 191, 255, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%)',
-    color: '#00BFFF',
-    border: '1px solid rgba(0, 191, 255, 0.3)',
-    boxShadow: '0 4px 15px rgba(0, 191, 255, 0.1)'
-  },
-  linkHover: { color: '#ffffff', background: 'rgba(255, 255, 255, 0.05)', transform: 'translateX(4px)' },
-  linkLocked: { opacity: 0.5, cursor: 'default' },
-  logoutButton: {
-      width: '100%',
-      padding: '14px 20px',
-      background: 'rgba(255, 59, 59, 0.1)',
-      border: '1px solid rgba(255, 59, 59, 0.2)',
-      color: '#ff4d4d',
-      fontSize: '0.95rem',
-      fontWeight: '600',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '10px',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease'
-  },
-  content: {
-    flexGrow: 1, padding: '0', backgroundColor: 'transparent', position: 'relative',
-    zIndex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100vh'
-  },
-  mobileHeader: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px',
-    background: 'rgba(25, 25, 25, 0.95)', backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)', zIndex: 40, flexShrink: 0
-  },
-  menuButton: {
-    background: 'rgba(102, 126, 234, 0.1)', border: '1px solid rgba(102, 126, 234, 0.3)',
-    borderRadius: '8px', padding: '8px', color: '#667eea', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-  },
-  userInfo: {
-    padding: '24px 32px', background: 'rgba(30, 30, 30, 0.6)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex',
-    alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
-  },
-  userWelcome: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  userName: { fontSize: '1.4rem', fontWeight: '700', color: '#ffffff', margin: 0 },
-  userRole: { fontSize: '0.9rem', color: '#00BFFF', fontWeight: '600' },
-  userStats: { display: 'flex', gap: '24px', alignItems: 'center' },
-  statItem: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' },
-  statValue: {
-    fontSize: '1.2rem', fontWeight: '700',
-    background: 'linear-gradient(135deg, #00BFFF 0%, #667eea 100%)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-  },
-  statLabel: { fontSize: '0.75rem', color: '#a0a0a0', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  mainContent: { padding: '32px', flexGrow: 1, overflowY: 'auto' },
-  mobileLogo: { height: '28px', width: 'auto' },
-  sectionDivider: {
-      margin: '10px 20px',
-      fontSize: '0.75rem',
-      color: '#666',
-      fontWeight: 'bold',
-      textTransform: 'uppercase',
-      letterSpacing: '1px'
-  }
+    layout: {
+        display: 'flex',
+        minHeight: '100vh',
+        fontFamily: "'Inter', sans-serif",
+        background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
+        position: 'relative',
+        overflow: 'hidden'
+    },
+    backgroundDecoration: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: 'radial-gradient(circle at 80% 20%, rgba(0, 191, 255, 0.08) 0%, transparent 50%)',
+        zIndex: 0
+    },
+    sidebar: {
+        width: '280px',
+        background: 'rgba(25, 25, 25, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '32px 0',
+        flexShrink: 0,
+        height: '100vh',
+        zIndex: 50,
+        transition: 'transform 0.3s ease-in-out',
+    },
+    sidebarMobile: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '100vh',
+        width: '280px',
+        transform: 'translateX(-100%)',
+        zIndex: 1000,
+        boxShadow: '4px 0 15px rgba(0,0,0,0.5)'
+    },
+    sidebarOpen: { transform: 'translateX(0)' },
+    overlay: {
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(3px)',
+        zIndex: 999
+    },
+    sidebarHeader: {
+        padding: '0 24px 20px 24px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        marginBottom: '20px',
+        textAlign: 'center'
+    },
+    logoContainer: { display: 'block', marginBottom: '10px', textDecoration: 'none' },
+    logoImage: { maxWidth: '140px', height: 'auto', display: 'block', margin: '0 auto' },
+    subtitle: { fontSize: '0.8rem', color: '#00BFFF', marginTop: '8px', fontWeight: '600', letterSpacing: '1px' },
+    navContainer: {
+        flex: 1,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        padding: '0 16px'
+    },
+    footerContainer: { padding: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginTop: 'auto' },
+    link: {
+        padding: '14px 20px',
+        textDecoration: 'none',
+        color: '#a0a0a0',
+        fontSize: '0.95rem',
+        fontWeight: '500',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        borderRadius: '12px',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer'
+    },
+    linkActive: {
+        background: 'linear-gradient(135deg, rgba(0, 191, 255, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%)',
+        color: '#00BFFF',
+        border: '1px solid rgba(0, 191, 255, 0.3)',
+        boxShadow: '0 4px 15px rgba(0, 191, 255, 0.1)'
+    },
+    linkHover: { color: '#ffffff', background: 'rgba(255, 255, 255, 0.05)', transform: 'translateX(4px)' },
+    linkLocked: { opacity: 0.5, cursor: 'default' },
+    logoutButton: {
+        width: '100%',
+        padding: '14px 20px',
+        background: 'rgba(255, 59, 59, 0.1)',
+        border: '1px solid rgba(255, 59, 59, 0.2)',
+        color: '#ff4d4d',
+        fontSize: '0.95rem',
+        fontWeight: '600',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease'
+    },
+    content: {
+        flexGrow: 1, padding: '0', backgroundColor: 'transparent', position: 'relative',
+        zIndex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100vh'
+    },
+    mobileHeader: {
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px',
+        background: 'rgba(25, 25, 25, 0.95)', backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)', zIndex: 40, flexShrink: 0
+    },
+    menuButton: {
+        background: 'rgba(102, 126, 234, 0.1)', border: '1px solid rgba(102, 126, 234, 0.3)',
+        borderRadius: '8px', padding: '8px', color: '#667eea', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+    },
+    userInfo: {
+        padding: '24px 32px', background: 'rgba(30, 30, 30, 0.6)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex',
+        alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
+    },
+    userWelcome: { display: 'flex', flexDirection: 'column', gap: '4px' },
+    userName: { fontSize: '1.4rem', fontWeight: '700', color: '#ffffff', margin: 0 },
+    userRole: { fontSize: '0.9rem', color: '#00BFFF', fontWeight: '600' },
+    userStats: { display: 'flex', gap: '24px', alignItems: 'center' },
+    statItem: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' },
+    statValue: {
+        fontSize: '1.2rem', fontWeight: '700',
+        background: 'linear-gradient(135deg, #00BFFF 0%, #667eea 100%)',
+        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+    },
+    statLabel: { fontSize: '0.75rem', color: '#a0a0a0', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' },
+    mainContent: { padding: '32px', flexGrow: 1, overflowY: 'auto' },
+    mobileLogo: { height: '28px', width: 'auto' },
+    sectionDivider: {
+        margin: '10px 20px',
+        fontSize: '0.75rem',
+        color: '#666',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: '1px'
+    }
 };
 
 // --- Componente Sidebar ---
@@ -237,7 +241,8 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
             <div style={sidebarStyle}>
                 <div style={styles.sidebarHeader}>
                     <Link to="/" style={styles.logoContainer} onClick={isMobile ? onClose : undefined}>
-                        <img src="/src/images/BLACK.png" alt="Logo" style={styles.logoImage} />
+                        {/* 🛑 CORRECCIÓN DE RUTA: Uso de variable importada */}
+                        <img src={LogoBlack} alt="Logo" style={styles.logoImage} />
                     </Link>
                     <p style={styles.subtitle}>Socio Afiliado</p>
                 </div>
@@ -327,7 +332,8 @@ const UserInfo = ({ user }) => {
 const MobileHeader = ({ onMenuClick }) => (
     <div style={styles.mobileHeader}>
         <button style={styles.menuButton} onClick={onMenuClick}><FiMenu size={22} /></button>
-        <img src="/src/images/BLACK.png" alt="Logo" style={styles.mobileLogo}/>
+        {/* 🛑 CORRECCIÓN DE RUTA: Uso de variable importada */}
+        <img src={LogoBlack} alt="Logo" style={styles.mobileLogo}/>
         <div style={{ width: '40px' }} />
     </div>
 );
