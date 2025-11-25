@@ -2386,11 +2386,11 @@ app.get('/api/notifications', authenticateToken, isUser, async (req, res) => {
     try {
         // Obtenemos las últimas 20 notificaciones
         const notificationsQuery = `
-      SELECT id, title, message, link_url, is_read, created_at
-      FROM notifications
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-      LIMIT 20;
+    SELECT id, title, message, link_url, is_read, created_at
+    FROM notifications
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+    LIMIT 20;
     `;
         const notificationsResult = await pool.query(notificationsQuery, [userId]);
 
@@ -3604,3 +3604,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+
