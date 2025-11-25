@@ -300,8 +300,7 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
         // Secciones por Rango
         { path: '/usuario/ganancias', label: 'Ganancias VIP', icon: FiTrendingUp, description: 'Tus ingresos', requiredTier: 'vip', color: '#e6ac00' },
         { path: '/usuario/descuentos-diamante', label: 'Zona Diamante', icon: FiTarget, description: 'Descuentos exclusivos', requiredTier: 'diamante', color: '#00BFFF' },
-        // Perfil
-        { path: '/usuario/perfil', label: 'Configurar Perfil', icon: FiStar, description: 'Información y seguridad', requiredTier: 'usuario', color: '#a0a0a0' },
+
     ];
     
     const handleTierLinkClick = (e, requiredTier) => {
@@ -516,7 +515,6 @@ const UserDashboard = () => {
                         <Route path="puntos" element={<RedeemPoints />} />
                         <Route path="recompensas" element={<RedemptionHistory />} />
                         <Route path="calificar-proveedores" element={<UserRateProviders />} />
-                        <Route path="perfil" element={<ProfileSettings />} /> 
                         
                         {isVip && <Route path="ganancias" element={<VIPEarnings />} />}
                         {isDiamond && <Route path="descuentos-diamante" element={<DiamondDiscounts />} />}
