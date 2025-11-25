@@ -11,6 +11,10 @@ import {
 // Importamos el contexto de autenticación
 import { useAuth } from '/src/context/AuthContext';
 
+// 🛑 SOLUCIÓN DEL LOGO: Importamos la imagen como un módulo
+// La ruta es '../../images/BLACK.png' porque AdminDashboard.jsx está en src/components/layout/
+import LogoBlack from '../images/BLACK.png'; 
+
 // Importamos los componentes de gestión
 import CategoryManagement from '../features/dashboard/AdminDashboard/CategoryManagement.jsx';
 import SiteSettings from '../features/dashboard/AdminDashboard/SiteSettings.jsx';
@@ -244,8 +248,8 @@ const styles = {
       marginBottom: '5px'
   },
   headerDesc: {
-      color: '#aaa',
-      marginBottom: '20px'
+    color: '#aaa',
+    marginBottom: '20px'
   },
   table: { width: '100%', borderCollapse: 'collapse' },
   th: { 
@@ -331,10 +335,11 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
       <div style={sidebarStyle}>
         <div style={styles.sidebarHeader}>
           <Link to="/" style={styles.logoContainer} onClick={isMobile ? onClose : undefined}>
+              {/* 🛑 USO DEL LOGO IMPORTADO */}
              <img 
-                src="/src/images/BLACK.png"
-                alt="Logo" 
-                style={styles.logoImage} 
+                 src={LogoBlack} // <-- ¡CORREGIDO!
+                 alt="Logo" 
+                 style={styles.logoImage} 
              />
           </Link>
           <div style={styles.subtitle}>PANEL ADMINISTRADOR</div>
@@ -345,11 +350,11 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
             <div key={index}>
               <div style={styles.navSectionTitle}>{section.title}</div>
               {section.items.map((item) => {
-                 const IconComponent = item.icon;
-                 const active = isActive(item.path);
-                 const hovered = hoveredLink === item.path;
-                 
-                 return (
+                  const IconComponent = item.icon;
+                  const active = isActive(item.path);
+                  const hovered = hoveredLink === item.path;
+                  
+                  return (
                     <Link
                       key={item.path}
                       to={item.path}
@@ -367,7 +372,7 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
                         {item.label}
                       </span>
                     </Link>
-                 );
+                  );
               })}
             </div>
           ))}
@@ -444,8 +449,9 @@ const MobileHeader = ({ onMenuClick }) => (
             <FiMenu size={22} />
         </button>
         <Link to="/">
+            {/* 🛑 USO DEL LOGO IMPORTADO */}
             <img 
-                src="/src/images/BLACK.png" 
+                src={LogoBlack} // <-- ¡CORREGIDO!
                 alt="Logo" 
                 style={styles.mobileLogo}
             />
@@ -474,7 +480,7 @@ const OrdersPage = () => {
   return (
     <div style={styles.internalCard}>
       <div style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
-         <div style={{flex: 1, minWidth: '200px', position: 'relative'}}>
+          <div style={{flex: 1, minWidth: '200px', position: 'relative'}}>
             <FiSearch style={{position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa'}} />
             <input 
                 placeholder="Buscar pedido..." 
@@ -483,10 +489,10 @@ const OrdersPage = () => {
                     border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white'
                 }} 
             />
-         </div>
-         <button style={{padding: '10px 15px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer', display: 'flex', gap: '5px', alignItems: 'center'}}>
+          </div>
+          <button style={{padding: '10px 15px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer', display: 'flex', gap: '5px', alignItems: 'center'}}>
             <FiFilter /> Filtrar
-         </button>
+          </button>
       </div>
 
       <div style={{overflowX: 'auto'}}>
@@ -503,8 +509,8 @@ const OrdersPage = () => {
             </thead>
             <tbody>
               {orders.map((order) => {
-                 const statusInfo = getStatusColor(order.status);
-                 return (
+                  const statusInfo = getStatusColor(order.status);
+                  return (
                   <tr key={order.id}>
                     <td style={styles.td}>#{order.id}</td>
                     <td style={styles.td}><span style={{fontWeight:'600', color: 'white'}}>{order.product}</span></td>
@@ -512,18 +518,18 @@ const OrdersPage = () => {
                     <td style={styles.td}>{order.price}</td>
                     <td style={styles.td}>
                       <span style={{...styles.statusBadge, backgroundColor: statusInfo.bg, color: statusInfo.text}}>
-                         {statusInfo.icon} {order.status.toUpperCase()}
+                          {statusInfo.icon} {order.status.toUpperCase()}
                       </span>
                     </td>
                     <td style={styles.td}>
-                       <div style={{display: 'flex', gap: '8px'}}>
+                        <div style={{display: 'flex', gap: '8px'}}>
                           <button style={{background:'none', border:'none', color:'#667eea', cursor:'pointer'}}><FiEye size={18}/></button>
                           <button style={{background:'none', border:'none', color:'#aaa', cursor:'pointer'}}><FiEdit size={18}/></button>
                           <button style={{background:'none', border:'none', color:'#ff4d4d', cursor:'pointer'}}><FiTrash2 size={18}/></button>
-                       </div>
+                        </div>
                     </td>
                   </tr>
-                 );
+                  );
               })}
             </tbody>
           </table>
@@ -552,7 +558,7 @@ const AdminDashboard = () => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  const CustomAdminOrderReports = () => <OrdersPage />;
+  // const CustomAdminOrderReports = () => <OrdersPage />; // No es necesario si ya usas AdminOrderReports
 
   if (isLoading) return <div style={{color:'white', padding:'50px', textAlign:'center'}}>Cargando Admin...</div>;
   if (!user) return <Navigate to="/login" replace />; 
@@ -569,19 +575,19 @@ const AdminDashboard = () => {
       />
 
       <div style={styles.content}>
-         {isMobile ? (
-             <MobileHeader onMenuClick={toggleSidebar} />
-         ) : (
-             <UserInfo user={user} />
-         )}
+          {isMobile ? (
+              <MobileHeader onMenuClick={toggleSidebar} />
+          ) : (
+              <UserInfo user={user} />
+          )}
 
-         <div style={{
-             ...styles.mainContent,
-             padding: isMobile ? '20px' : '32px'
-         }}>
-             <PageHeader currentPage={location.pathname} />
+          <div style={{
+              ...styles.mainContent,
+              padding: isMobile ? '20px' : '32px'
+          }}>
+              <PageHeader currentPage={location.pathname} />
 
-             <Routes>
+              <Routes>
                 <Route index element={<Navigate to="categorias" replace />} />
                 
                 <Route path="categorias" element={<CategoryManagement />} />
@@ -595,8 +601,8 @@ const AdminDashboard = () => {
                 <Route path="recompensas" element={<RedeemableItemsManagement />} />
                 
                 <Route path="pedidos" element={<AdminOrderReports />} />
-             </Routes>
-         </div>
+              </Routes>
+          </div>
       </div>
     </div>
   );
