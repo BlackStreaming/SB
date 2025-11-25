@@ -12,12 +12,13 @@ import {
 
 const styles = {
   container: {
+    // Asegurar que el contenedor principal no genere scroll horizontal no deseado
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: '#e0e0e0',
     position: 'relative',
-    overflowX: 'hidden' 
+    overflowX: 'hidden' // CLAVE: Previene el scroll horizontal global
   },
   backgroundDecoration: {
     position: 'absolute',
@@ -38,7 +39,7 @@ const styles = {
   content: {
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '0 16px 60px 16px', // Reduje el padding lateral para ganar espacio en móvil
+    padding: '0 16px 60px 16px', 
     position: 'relative',
     zIndex: 1
   },
@@ -48,7 +49,7 @@ const styles = {
     marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
   },
   sectionTitle: {
-    fontSize: '1.8rem', fontWeight: '800', color: '#ffffff', margin: 0, // Bajé un poco el tamaño de fuente
+    fontSize: '1.8rem', fontWeight: '800', color: '#ffffff', margin: 0, 
     display: 'flex', alignItems: 'center', gap: '12px',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
@@ -71,7 +72,6 @@ const styles = {
     background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)', transition: 'left 0.5s ease'
   },
   buttonGlowHover: { left: '100%' },
-  // NOTA: Eliminé "grid" y "categoriesGrid" de aquí para usar clases CSS abajo
   loadingContainer: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '24px', position: 'relative', zIndex: 1
   },
@@ -104,7 +104,7 @@ const styles = {
     fontSize: '24px', color: 'white', position: 'relative', overflow: 'hidden'
   },
   whatsappButton: { background: '#25D366', position: 'relative' },
-  scrollToTopButton: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', opacity: 0, transform: 'translateY(20px)', transition: 'all 0.3s ease' },
+  scrollToTopButton: { opacity: 0, transform: 'translateY(20px)', transition: 'all 0.3s ease', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }, 
   scrollToTopButtonVisible: { opacity: 1, transform: 'translateY(0)' },
   buttonHover: { transform: 'translateY(-3px)', boxShadow: '0 12px 30px rgba(0, 0, 0, 0.4)' },
   floatingButtonGlow: {
@@ -183,8 +183,8 @@ const HomePage = () => {
             <h3 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>Cargando contenido</h3>
             <p style={styles.loadingText}>Preparando la mejor experiencia para ti...</p>
           </div>
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -267,7 +267,6 @@ const HomePage = () => {
             </Link>
           </div>
           
-          {/* AQUÍ ESTÁ EL CAMBIO: Usamos la clase 'custom-grid' */}
           <div className="custom-grid">
             {categories.length > 0 ? (
               categories.map(cat => <CategoryCard category={cat} key={cat.id} />)
@@ -299,7 +298,6 @@ const HomePage = () => {
             </Link>
           </div>
           
-          {/* AQUÍ ESTÁ EL CAMBIO: Usamos la clase 'custom-grid' */}
           <div className="custom-grid">
             {products.length > 0 ? (
               products.map(prod => <ProductCard product={prod} key={prod.id} />)
@@ -331,7 +329,6 @@ const HomePage = () => {
             </Link>
           </div>
           
-          {/* AQUÍ ESTÁ EL CAMBIO: Usamos la clase 'custom-grid' */}
           <div className="custom-grid">
             {products.length > 0 ? (
               products.slice(0, 4).map(prod => <ProductCard product={prod} key={prod.id} />)
@@ -352,24 +349,55 @@ const HomePage = () => {
 
       </div>
       
-      {/* ESTILOS CSS FINALES (Grid Responsivo de 2 columnas) */}
+      {/* 💥 SOLUCIÓN FINAL CSS (1 Columna Centrada y con ancho limitado en móvil) 💥 */}
       <style>{`
+        /* Animaciones */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        /* GRID PERSONALIZADO */
+        /* Asegurar que el BODY/HTML no tenga scroll horizontal */
+        body, html {
+            overflow-x: hidden !important;
+            width: 100%;
+        }
+
+        /* GRID POR DEFECTO (Escritorio/Tablet GRANDE) */
         .custom-grid {
           display: grid;
           gap: 20px;
-          /* Escritorio: Tarjetas pequeñas (mínimo 200px) para que quepan muchas */
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         }
         
-        /* MÓVIL: Forzar 2 columnas */
-        @media (max-width: 600px) {
+        /* MÓVIL (Pantallas hasta 768px): 1 COLUMNA COMPACTA */
+        @media (max-width: 768px) {
+          
+          /* 1. CONTENEDOR DE LA GRILLA: FORZAR 1 COLUMNA */
           .custom-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px; /* Menor espacio entre tarjetas en móvil */
+            grid-template-columns: 1fr !important; 
+            gap: 20px !important; 
+          }
+          
+          /* 2. HIJOS DE LA GRILLA (LAS TARJETAS): LIMITAR ANCHO Y CENTRAR */
+          .custom-grid > a, .custom-grid > div {
+             /* 💥 CAMBIO CLAVE: Limitar el ancho de la tarjeta para que no ocupe 100% */
+             max-width: 350px !important; 
+             width: 90% !important; /* Ocupa el 90% del espacio, permitiendo margen */
+             min-width: unset !important;
+             box-sizing: border-box !important;
+             margin: 0 auto 20px auto !important; /* Centrar la tarjeta y añadir margen inferior */
+             padding: 0 !important;
+          }
+          
+          /* 3. AJUSTE PARA EL ENCABEZADO DE LA SECCIÓN (Mejora la visualización vertical) */
+          div[style*="sectionHeader"] {
+              flex-direction: column;
+              align-items: flex-start;
+          }
+          /* El botón "Ver todas" se pone debajo y ocupa todo el ancho */
+          .view-all-button { 
+              margin-top: 10px;
+              width: 100%;
+              justify-content: center;
           }
         }
       `}</style>
