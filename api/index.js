@@ -328,7 +328,7 @@ app.get('/api/products', async (req, res) => {
       SELECT
         p.id, p.name, p.slug, p.price_usd, p.fictitious_price_usd,
         p.offer_price_usd, p.tags, p.image_url, p.status,
-        p.description, p.terms_conditions,  
+        p.description, p.terms_conditions,
         p.duration_days, p.has_renewal, p.renewal_price_usd,
         c.name AS category_name,
         u.username AS provider_name,
@@ -3679,3 +3679,4 @@ app.listen(PORT, () => {
 
 // Exportaciones (si las necesitas)
 export default app;
+
