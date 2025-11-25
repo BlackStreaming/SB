@@ -12,20 +12,20 @@ import {
     FiArrowLeft,
     FiCheck,
     FiX,
-    FiShield,
     FiStar,
     FiGift
 } from 'react-icons/fi';
 
 // --- Estilos Ultra Modernos ---
 const styles = {
+    // ESTILOS DE CONTENEDOR Y CARTA (AJUSTADO PARA MEJOR RESPONSIVE)
     container: { 
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
-        padding: '2rem 1rem',
+        padding: '2rem 1rem', // Más padding horizontal para móviles
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         position: 'relative',
         overflow: 'hidden'
@@ -41,10 +41,10 @@ const styles = {
     },
     card: {
         width: '100%',
-        maxWidth: '500px',
+        maxWidth: '400px', // REDUCCIÓN para mejor ajuste en pantallas más pequeñas
         background: 'rgba(25, 25, 25, 0.8)',
         backdropFilter: 'blur(20px)',
-        padding: '3rem 2.5rem',
+        padding: '2rem 1.5rem', // REDUCCIÓN del padding para móviles
         borderRadius: '28px',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
@@ -53,14 +53,14 @@ const styles = {
     },
     header: {
         textAlign: 'center',
-        marginBottom: '2.5rem',
+        marginBottom: '2rem',
     },
     logo: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: '0.75rem',
-        marginBottom: '1.5rem',
+        marginBottom: '1rem',
         textDecoration: 'none',
         fontSize: '1.75rem',
         fontWeight: '800',
@@ -69,7 +69,7 @@ const styles = {
         WebkitTextFillColor: 'transparent',
     },
     title: {
-        fontSize: '2.5rem',
+        fontSize: '2rem', // Reducido para mejor ajuste
         fontWeight: '800',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         WebkitBackgroundClip: 'text',
@@ -78,7 +78,7 @@ const styles = {
         letterSpacing: '-0.02em'
     },
     subtitle: {
-        fontSize: '1.1rem',
+        fontSize: '1rem', // Reducido para mejor ajuste
         color: '#b0b0b0',
         margin: 0,
         fontWeight: '400',
@@ -87,14 +87,15 @@ const styles = {
     form: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem',
+        gap: '1.25rem', // Reducido ligeramente
     },
     inputGroup: {
         position: 'relative',
     },
-    input: {
+    // Estilo base para todos los inputs
+    inputBase: {
         width: '100%',
-        padding: '1.2rem 1.2rem 1.2rem 3.5rem',
+        padding: '1rem 1.2rem 1rem 3.5rem', // Padding ajustado
         border: '2px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '16px',
         fontSize: '1rem',
@@ -104,20 +105,40 @@ const styles = {
         outline: 'none',
         boxSizing: 'border-box',
         fontFamily: 'inherit',
-        '&:focus': {
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(35, 35, 35, 0.9)',
-            boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)'
-        }
     },
+    // Estilos de inputs específicos
+    input: {
+        // ...styles.inputBase, // Si se usa sintaxis ES6: { ...styles.inputBase, ...otrosEstilos }
+        width: '100%',
+        padding: '1rem 1.2rem 1rem 3.5rem',
+        border: '2px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '16px',
+        fontSize: '1rem',
+        backgroundColor: 'rgba(30, 30, 30, 0.8)',
+        color: '#ffffff',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        outline: 'none',
+        boxSizing: 'border-box',
+        fontFamily: 'inherit',
+    },
+    // GRUPO DE TELÉFONO (SE MANTIENE FLEX, PERO SE REDISTRIBUYE EL ESPACIO)
     phoneInputGroup: {
         display: 'flex',
         gap: '12px',
-        alignItems: 'stretch'
+        alignItems: 'stretch',
+    },
+    phonePrefixContainer: {
+        position: 'relative', 
+        flex: '0 0 80px' // FIJA EL ANCHO para evitar que colapse demasiado
+    },
+    phoneNumberContainer: {
+        position: 'relative', 
+        flex: '1' // Ocupa el espacio restante
     },
     phonePrefix: {
-        flex: 1,
-        padding: '1.2rem 1rem',
+        // ...styles.inputBase, // Heredar de la base
+        width: '100%', // Asegura el 100% del contenedor padre
+        padding: '1rem 0.5rem', 
         border: '2px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '16px',
         fontSize: '1rem',
@@ -126,11 +147,12 @@ const styles = {
         outline: 'none',
         fontFamily: 'inherit',
         textAlign: 'center',
-        minWidth: '80px'
+        boxSizing: 'border-box',
     },
     phoneNumber: {
-        flex: 3,
-        padding: '1.2rem 1.2rem 1.2rem 3.5rem',
+        // ...styles.inputBase, // Heredar de la base
+        width: '100%',
+        padding: '1rem 1.2rem 1rem 3.5rem',
         border: '2px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '16px',
         fontSize: '1rem',
@@ -139,11 +161,7 @@ const styles = {
         transition: 'all 0.3s ease',
         outline: 'none',
         fontFamily: 'inherit',
-        '&:focus': {
-            borderColor: '#667eea',
-            backgroundColor: 'rgba(35, 35, 35, 0.9)',
-            boxShadow: '0 0 0 4px rgba(102, 126, 234, 0.1)'
-        }
+        boxSizing: 'border-box',
     },
     inputIcon: {
         position: 'absolute',
@@ -169,13 +187,11 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        '&:hover': {
-            background: 'rgba(102, 126, 234, 0.2)',
-            color: '#667eea'
-        }
+        zIndex: 3 // Asegurar que está por encima del input
     },
+    // Estilos de botón
     button: {
-        padding: '1.2rem 2rem',
+        padding: '1rem 2rem', // Ajustado ligeramente
         border: 'none',
         borderRadius: '16px',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -192,10 +208,6 @@ const styles = {
         position: 'relative',
         overflow: 'hidden',
         fontFamily: 'inherit',
-        '&:hover:not(:disabled)': {
-            transform: 'translateY(-2px)',
-            boxShadow: '0 12px 30px rgba(102, 126, 234, 0.4)'
-        }
     },
     buttonGlow: {
         position: 'absolute',
@@ -211,11 +223,12 @@ const styles = {
         cursor: 'not-allowed',
         transform: 'none !important'
     },
+    // Estilos de mensajes
     message: {
-        padding: '1.2rem',
+        padding: '1rem',
         borderRadius: '16px',
         textAlign: 'center',
-        fontSize: '0.95rem',
+        fontSize: '0.9rem',
         fontWeight: '500',
         display: 'flex',
         alignItems: 'center',
@@ -233,16 +246,17 @@ const styles = {
         color: '#90ee90',
         borderColor: 'rgba(144, 238, 144, 0.3)'
     },
+    // Estilos de pie de página
     footer: {
         textAlign: 'center',
-        marginTop: '2.5rem',
-        paddingTop: '2rem',
+        marginTop: '2rem',
+        paddingTop: '1.5rem',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)'
     },
     footerText: {
         color: '#a0a0a0',
-        fontSize: '1rem',
-        margin: '0 0 1.5rem 0',
+        fontSize: '0.95rem',
+        margin: '0 0 1rem 0',
         lineHeight: '1.6'
     },
     loginLink: {
@@ -257,12 +271,8 @@ const styles = {
         borderRadius: '12px',
         background: 'rgba(102, 126, 234, 0.1)',
         border: '1px solid rgba(102, 126, 234, 0.2)',
-        '&:hover': {
-            background: 'rgba(102, 126, 234, 0.2)',
-            transform: 'translateY(-1px)',
-            boxShadow: '0 8px 20px rgba(102, 126, 234, 0.3)'
-        }
     },
+    // Requisitos de contraseña
     passwordRequirements: {
         marginTop: '0.5rem',
         padding: '1rem',
@@ -274,12 +284,9 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
-        fontSize: '0.85rem',
+        fontSize: '0.8rem',
         color: '#a0a0a0',
         marginBottom: '0.5rem',
-        '&:last-child': {
-            marginBottom: 0
-        }
     },
     requirementMet: {
         color: '#90ee90'
@@ -288,7 +295,7 @@ const styles = {
         color: '#ff6b6b'
     },
     pulseAnimation: {
-        animation: 'pulse 2s infinite'
+        // La animación debe definirse en la etiqueta <style>
     }
 };
 
@@ -329,9 +336,9 @@ const RegisterPage = () => {
             return;
         }
 
-        // Validación de fortaleza de contraseña
-        if (formData.password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres.');
+        // Validación de fortaleza de contraseña (AJUSTADA: comprueba que todos los requisitos básicos estén cubiertos)
+        if (!allRequirementsMet) {
+            setError('La contraseña no cumple con todos los requisitos de seguridad.');
             setIsLoading(false);
             return;
         }
@@ -352,7 +359,7 @@ const RegisterPage = () => {
             }, 2000);
 
         } catch (err) {
-            setError(err.response?.data?.error || 'Error al conectar con el servidor.');
+            setError(err.response?.data?.error || 'Error al intentar registrar. Intente de nuevo más tarde.');
         } finally {
             setIsLoading(false);
         }
@@ -508,8 +515,8 @@ const RegisterPage = () => {
                     </div>
 
                     {/* Campo Teléfono (OBLIGATORIO) */}
-                    <div style={styles.phoneInputGroup}>
-                        <div style={{ position: 'relative', flex: 1 }}>
+                    <div style={styles.phoneInputGroup} id="phone-group"> {/* Agregado ID para media query */}
+                        <div style={styles.phonePrefixContainer}>
                             <input 
                                 type="text" 
                                 name="phone_prefix" 
@@ -519,7 +526,7 @@ const RegisterPage = () => {
                                 required
                             />
                         </div>
-                        <div style={{ position: 'relative', flex: 3 }}>
+                        <div style={styles.phoneNumberContainer}>
                             <div style={styles.inputIcon}>
                                 <FiPhone size={20} />
                             </div>
@@ -570,7 +577,7 @@ const RegisterPage = () => {
                         type="submit" 
                         style={{
                             ...styles.button,
-                            ...(isLoading ? styles.buttonLoading : {})
+                            ...(isLoading || !allRequirementsMet ? styles.buttonLoading : {})
                         }}
                         disabled={isLoading || !allRequirementsMet}
                         onMouseEnter={() => setIsButtonHovered(true)}
@@ -578,11 +585,11 @@ const RegisterPage = () => {
                     >
                         <div style={{ 
                             ...styles.buttonGlow,
-                            ...(isButtonHovered && { left: '100%' })
+                            ...(isButtonHovered && !isLoading && allRequirementsMet && { left: '100%' })
                         }} />
                         {isLoading ? (
                             <>
-                                <div style={styles.pulseAnimation}>
+                                <div className="pulse-animation">
                                     <FiUserPlus size={20} />
                                 </div>
                                 Creando cuenta...
@@ -611,7 +618,7 @@ const RegisterPage = () => {
                 </div>
             </div>
 
-            {/* Estilos CSS para animaciones */}
+            {/* Estilos CSS para animaciones y media queries (MEJOR SOLUCIÓN RESPONSIVE) */}
             <style>
                 {`
                     @keyframes pulse {
@@ -619,9 +626,45 @@ const RegisterPage = () => {
                         50% { opacity: 0.5; }
                         100% { opacity: 1; }
                     }
+                    
+                    .pulse-animation {
+                        animation: pulse 2s infinite;
+                    }
+
+                    /* Estilos para Hover y Focus que no funcionan bien en estilos inline */
+                    input[style]:focus, 
+                    select[style]:focus {
+                        border-color: #667eea !important;
+                        background-color: rgba(35, 35, 35, 0.9) !important;
+                        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+                    }
+
+                    button[style]:hover:not(:disabled) {
+                        transform: translateY(-2px) !important;
+                        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4) !important;
+                    }
+
+                    /* MEDIA QUERY para APILAR el campo de teléfono en móviles */
+                    @media (max-width: 480px) {
+                        #phone-group {
+                            flex-direction: column; /* Apila el prefijo y el número */
+                            gap: 1.25rem; /* Espacio entre los campos apilados */
+                        }
+                        
+                        /* Ambos contenedores ocupan el 100% */
+                        #phone-group > div {
+                            flex: 1 1 100% !important; 
+                        }
+
+                        /* Ajustar el padding para el input de prefijo cuando está apilado */
+                        input[name="phone_prefix"] {
+                            text-align: left !important;
+                            padding-left: 1.2rem !important; /* Mover el texto a la izquierda */
+                        }
+                    }
                 `}
             </style>
-        </div>
+        </div> 
     );
 };
 
