@@ -107,6 +107,19 @@ const createNotification = async (userId, title, message, linkUrl = null) => {
     }
 };
 
+// --- FUNCIÓN HELPER PARA NORMALIZAR TAGS ---
+const normalizeTags = (tagsValue) => {
+    if (tagsValue) {
+        if (Array.isArray(tagsValue)) {
+            return tagsValue;
+        } else if (typeof tagsValue === 'string') {
+            // Asume que si es TEXT en DB, los tags están separados por comas
+            return tagsValue.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        }
+    }
+    return [];
+};
+
 // --- GUARDIAS DE SEGURIDAD (Middleware de Autenticación) ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -340,8 +353,8 @@ app.get('/api/products', async (req, res) => {
         const result = await pool.query(query);
         res.json(result.rows.map(product => ({
             ...product,
-            // CORRECCIÓN: Asegurar que tags sea un array para evitar .map is not a function
-            tags: product.tags || [],
+            // CORRECCIÓN: Usar la función helper para asegurar que tags sea un array
+            tags: normalizeTags(product.tags),
             provider_phone: product.phone_prefix && product.phone_number
                 ? `${product.phone_prefix}${product.phone_number}`
                 : 'N/A',
@@ -391,8 +404,8 @@ app.get('/api/categories/:slug/products', async (req, res) => {
             categoryName: category.name,
             products: productsResult.rows.map(product => ({
                 ...product,
-                // CORRECCIÓN: Asegurar que tags sea un array
-                tags: product.tags || [],
+                // CORRECCIÓN: Usar la función helper para asegurar que tags sea un array
+                tags: normalizeTags(product.tags),
                 provider_phone: product.phone_prefix && product.phone_number
                     ? `${product.phone_prefix}${product.phone_number}`
                     : 'N/A',
@@ -444,9 +457,7 @@ app.get('/api/products/:slug', async (req, res) => {
         const product = result.rows[0];
 
         // CORRECCIÓN: Asegurar que tags sea un array antes de enviarlo.
-        if (!product.tags) {
-            product.tags = [];
-        }
+        product.tags = normalizeTags(product.tags);
 
         res.json({
             ...product,
@@ -1718,7 +1729,7 @@ app.delete('/api/provider/stock-items/:stockItemId', authenticateToken, isProvid
       WHERE id = $1 AND provider_id = $2 AND status = $3
       RETURNING *;
     `;
-        const result = await client.query(deleteQuery, [stockItemId, providerId, 'publicada']);
+        const result = await pool.query(deleteQuery, [stockItemId, providerId, 'publicada']);
 
         if (result.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -2244,7 +2255,7 @@ app.post('/api/orders/renew/:orderItemId', authenticateToken, isUser, async (req
       JOIN products p ON oi.product_id = p.id
       WHERE oi.id = $1 FOR UPDATE
     `;
-        const itemResult = await client.query(itemQuery, [orderItemId]);
+        const itemResult = await pool.query(itemQuery, [orderItemId]);
 
         if (itemResult.rows.length === 0) {
             await client.query('ROLLBACK');
@@ -2377,7 +2388,7 @@ app.post('/api/orders/item/activate/:orderItemId', authenticateToken, isAdmin, a
 });
 
 // ---
-// 13.7 RUTAS DE NOTIFICACIONES
+// 13.7 RUTAS DE NOTIFICACIONES (LIMPIADAS DE CARACTERES INVISIBLES)
 // ---
 
 // Obtener mis notificaciones (y el conteo de no leídas)
@@ -2447,9 +2458,9 @@ app.get('/api/admin/provider-settings', authenticateToken, isAdmin, async (req, 
         // 1. Obtener todos los proveedores y sus permisos
         const providersQuery = `
       SELECT u.id, u.username, u.status,
-            COALESCE(ps.can_recharge, false) AS can_recharge,
-            COALESCE(ps.can_affiliate, false) AS can_affiliate,
-            COALESCE(ps.affiliate_limit, 0) AS affiliate_limit
+             COALESCE(ps.can_recharge, false) AS can_recharge,
+             COALESCE(ps.can_affiliate, false) AS can_affiliate,
+             COALESCE(ps.affiliate_limit, 0) AS affiliate_limit
       FROM users u
       LEFT JOIN provider_settings ps ON u.id = ps.provider_id
       WHERE u.role = 'proveedor'
@@ -2885,9 +2896,9 @@ app.get('/api/admin/reports/summary', authenticateToken, isAdmin, async (req, re
         // Calcular métricas principales
         const summaryQuery = `
            SELECT
-              COALESCE(SUM(o.total_amount_usd), 0)::numeric(10, 2) AS total_revenue,
-              COUNT(o.id) AS total_orders,
-              COALESCE(AVG(o.total_amount_usd), 0)::numeric(10, 2) AS avg_order_value
+             COALESCE(SUM(o.total_amount_usd), 0)::numeric(10, 2) AS total_revenue,
+             COUNT(o.id) AS total_orders,
+             COALESCE(AVG(o.total_amount_usd), 0)::numeric(10, 2) AS avg_order_value
            FROM orders o
            WHERE ${filterString};
         `;
@@ -2897,8 +2908,8 @@ app.get('/api/admin/reports/summary', authenticateToken, isAdmin, async (req, re
         // Calcular la venta promedio diaria (Daily Revenue)
         const dailyRevenueQuery = `
            SELECT COALESCE(
-              SUM(o.total_amount_usd) / NULLIF(COUNT(DISTINCT o.created_at::date), 0),
-              0
+             SUM(o.total_amount_usd) / NULLIF(COUNT(DISTINCT o.created_at::date), 0),
+             0
            )::numeric(10, 2) AS daily_revenue
            FROM orders o
            WHERE ${filterString} AND o.status = 'completado';
@@ -2949,14 +2960,14 @@ app.get('/api/admin/reports/orders', authenticateToken, isAdmin, async (req, res
     // Query principal
     let query = `
            SELECT
-               o.id,
-               o.created_at,
-               o.total_amount_usd,
-               o.status,
-               u_user.username,
-               COUNT(oi.id) AS item_count,
-               SUM(oi.price_per_unit_usd * oi.quantity) AS subtotal_bruto,
-               c.code AS coupon_name
+              o.id,
+              o.created_at,
+              o.total_amount_usd,
+              o.status,
+              u_user.username,
+              COUNT(oi.id) AS item_count,
+              SUM(oi.price_per_unit_usd * oi.quantity) AS subtotal_bruto,
+              c.code AS coupon_name
            FROM orders o
            JOIN users u_user ON o.user_id = u_user.id
            JOIN order_items oi ON o.id = oi.order_id
@@ -2966,7 +2977,7 @@ app.get('/api/admin/reports/orders', authenticateToken, isAdmin, async (req, res
            GROUP BY o.id, u_user.username, c.code
            ORDER BY o.created_at DESC
            LIMIT 50;
-        `;
+         `;
 
     try {
         const result = await pool.query(query, params);
@@ -3604,4 +3615,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
