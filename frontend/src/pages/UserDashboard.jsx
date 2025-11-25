@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  FiDollarSign, 
-  FiShoppingBag, 
-  FiGift, 
-  FiAward, 
-  FiStar,
-  FiMenu,
-  FiTrendingUp,
-  FiTarget,
-  FiLogOut,
-  FiLock 
+    FiDollarSign, 
+    FiShoppingBag, 
+    FiGift, 
+    FiAward, 
+    FiStar,
+    FiMenu,
+    FiTrendingUp,
+    FiTarget,
+    FiLogOut,
+    FiLock 
 } from 'react-icons/fi';
 
 // Ajusta la ruta según tu estructura real
 import { useAuth } from '/src/context/AuthContext';
+
+// 🛑 SOLUCIÓN DEL LOGO: Importamos la imagen como un módulo
+// La ruta es '../../images/BLACK.png' asumiendo que UserDashboard.jsx está en src/components/layout/
+import LogoBlack from '../images/BLACK.png'; 
 
 import RechargePage from '../features/dashboard/UserDashboard/RechargePage.jsx';
 import OrderHistory from '../features/dashboard/UserDashboard/OrderHistory.jsx';
@@ -296,6 +300,8 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
         // Secciones por Rango
         { path: '/usuario/ganancias', label: 'Ganancias VIP', icon: FiTrendingUp, description: 'Tus ingresos', requiredTier: 'vip', color: '#e6ac00' },
         { path: '/usuario/descuentos-diamante', label: 'Zona Diamante', icon: FiTarget, description: 'Descuentos exclusivos', requiredTier: 'diamante', color: '#00BFFF' },
+        // Perfil
+        { path: '/usuario/perfil', label: 'Configurar Perfil', icon: FiStar, description: 'Información y seguridad', requiredTier: 'usuario', color: '#a0a0a0' },
     ];
     
     const handleTierLinkClick = (e, requiredTier) => {
@@ -323,8 +329,9 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
             <div style={sidebarStyle}>
                 <div style={styles.sidebarHeader}>
                     <Link to="/" style={styles.logoContainer} onClick={isMobile ? onClose : undefined}>
+                        {/* 🛑 CORRECCIÓN DE RUTA: Uso de variable importada */}
                         <img 
-                            src="src/images/BLACK.png" // Ajusta esta ruta si es necesario
+                            src={LogoBlack} // <-- ¡CORREGIDO!
                             alt="Logo" 
                             style={styles.logoImage} 
                         />
@@ -426,8 +433,9 @@ const MobileHeader = ({ onMenuClick }) => {
             </button>
             
             <Link to="/">
+                {/* 🛑 CORRECCIÓN DE RUTA: Uso de variable importada */}
                 <img 
-                    src="src/images/BLACK.png" 
+                    src={LogoBlack} // <-- ¡CORREGIDO!
                     alt="Logo" 
                     style={styles.mobileLogo}
                 />
