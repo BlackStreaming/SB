@@ -17,7 +17,7 @@ import { useAuth } from '/src/context/AuthContext';
 
 // 🛑 SOLUCIÓN DEL LOGO: Importamos la imagen como un módulo
 // La ruta es '../../images/BLACK.png' asumiendo que ProviderDashboard.jsx está en src/components/layout/
-import LogoBlack from '../../images/BLACK.png'; 
+import LogoBlack from '../images/BLACK.png'; 
 
 // Importamos los componentes de lógica
 import ProductManagement from '../features/dashboard/ProviderDashboard/ProductManagement.jsx';
@@ -417,3 +417,4 @@ const ProviderDashboard = () => {
 };
 
 export default ProviderDashboard;
+
