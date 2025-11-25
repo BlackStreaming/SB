@@ -263,7 +263,6 @@ const HomePage = () => {
               onMouseLeave={() => handleHover('viewAllCategories', false)}
             >
               <div style={{ ...styles.buttonGlow, ...(hoverStates.viewAllCategories && styles.buttonGlowHover) }} />
-              <span>Ver todas</span> <FiArrowRight size={18} />
             </Link>
           </div>
           
@@ -325,7 +324,6 @@ const HomePage = () => {
               onMouseLeave={() => handleHover('viewAllTrending', false)}
             >
               <div style={{ ...styles.buttonGlow, ...(hoverStates.viewAllTrending && styles.buttonGlowHover) }} />
-              <span>Explorar</span> <FiArrowRight size={18} />
             </Link>
           </div>
           
