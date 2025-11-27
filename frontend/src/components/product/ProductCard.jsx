@@ -3,471 +3,393 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  FiShoppingCart, FiTag, FiClock, FiRefreshCw, FiPackage, 
-  FiStar, FiZap, FiAlertCircle, FiCheck, FiUser, FiInfo, FiShield, FiX
+  FiShoppingCart, FiFileText, FiInfo, FiRefreshCw, FiUser, FiX, FiStar, FiAlertTriangle, FiTag
 } from 'react-icons/fi';
 
-// --- NUEVOS IMPORTS PARA LA FUNCIONALIDAD ---
-import { useCart } from '/src/context/CartContext'; // Asegúrate de que la ruta sea correcta
-import PurchaseModal from './PurchaseModal'; // Asegúrate de que la ruta al modal sea correcta
+import { useCart } from '/src/context/CartContext'; 
+import PurchaseModal from './PurchaseModal';
 
 // --- CONFIGURACIÓN ---
 const TIPO_DE_CAMBIO = 3.55;
 
-// --- Estilos "Clean Hybrid" ---
-const styles = {
-  cardLink: {
-    textDecoration: 'none',
-    color: 'inherit',
-    display: 'block',
-    height: '100%',
-  },
-  card: {
-    background: 'rgba(30, 30, 30, 0.6)', 
-    backdropFilter: 'blur(20px)',
-    borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
-    transition: 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    position: 'relative',
-    minHeight: '400px',
-  },
-  cardHover: {
-    transform: 'translateY(-6px)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.4)'
-  },
-  
-  // --- IMAGEN ---
-  imageContainer: {
-    height: '160px', 
-    overflow: 'hidden',
-    backgroundColor: '#ffffff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    padding: '15px',
-    borderBottom: '1px solid rgba(0,0,0,0.05)'
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-    transition: 'transform 0.5s ease',
-    filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
-  },
-  imageHover: { transform: 'scale(1.08)' },
-
-  // Tags
-  tags: {
-    position: 'absolute', top: '10px', right: '10px',
-    display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10, alignItems: 'flex-end',
-  },
-  tag: {
-    padding: '4px 8px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '700',
-    backdropFilter: 'blur(4px)', display: 'inline-flex', alignItems: 'center', gap: '4px',
-    border: '1px solid rgba(255, 255, 255, 0.2)', 
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-    textTransform: 'uppercase', letterSpacing: '0.5px',
-    color: '#fff',
-    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-  },
-  // Colores
-  tagOffer: { background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', color: '#000', textShadow: 'none' },
-  tagUltimos: { background: 'linear-gradient(135deg, #FF4500 0%, #FF6347 100%)' }, 
-  
-  // ESTADOS ESPECÍFICOS:
-  tagGreen: { background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)' }, // Stock (Verde)
-  tagRed: { background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)' },   // Agotado (Rojo)
-  tagYellow: { background: 'linear-gradient(135deg, #f1c40f 0%, #f39c12 100%)', color: '#000', textShadow: 'none' }, // A Pedido (Amarillo)
-  tagBlue: { background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' },   // Activación (Celeste/Azul)
-  tagMuted: { background: 'rgba(0, 0, 0, 0.8)', color: '#fff' },
-
-  // --- CONTENIDO ---
-  content: {
-    padding: '16px', 
-    display: 'flex', flexDirection: 'column', gap: '8px', flex: 1,
-    justifyContent: 'space-between',
-    borderTop: '1px solid rgba(255,255,255,0.05)'
-  },
-  
-  // Proveedor y Categoría
-  providerSection: { 
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: '2px' 
-  },
-  providerInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    flexWrap: 'wrap'
-  },
-  category: { 
-    fontSize: '0.65rem', color: '#667eea', fontWeight: '700', 
-    textTransform: 'uppercase', letterSpacing: '0.5px',
-    background: 'rgba(102, 126, 234, 0.1)', padding: '2px 6px', borderRadius: '4px'
-  },
-  providerName: {
-    fontSize: '0.8rem', color: '#e0e0e0', fontWeight: '600',
-    display: 'flex', alignItems: 'center', gap: '4px'
-  },
-
-  name: {
-    fontSize: '1rem', fontWeight: '700', color: '#ffffff', lineHeight: '1.3', margin: 0,
-    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', 
-    minHeight: '40px' 
-  },
-
-  // Botones de Info
-  infoButtons: {
-    display: 'flex', gap: '8px', marginTop: '4px'
-  },
-  infoBtn: {
-    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '6px', padding: '4px 8px', fontSize: '0.7rem', color: '#aaa',
-    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
-    transition: 'all 0.2s ease',
-  },
-  infoBtnHover: {
-    background: 'rgba(255,255,255,0.1)', color: '#fff', borderColor: 'rgba(255,255,255,0.2)'
-  },
-  
-  details: { 
-    display: 'flex', flexWrap: 'wrap', gap: '8px', color: '#a0a0a0', fontSize: '0.8rem' 
-  },
-  detailItem: { display: 'flex', alignItems: 'center', gap: '4px' },
-  renewal: { display: 'flex', alignItems: 'center', gap: '4px', color: '#2ecc71', fontWeight: '600', fontSize: '0.8rem' },
-
-  // Rating
-  ratingContainer: { display: 'flex', alignItems: 'center', gap: '2px' },
-  starFilled: { color: '#FFD700', fill: '#FFD700' },
-  starEmpty: { color: '#444', fill: 'none' },
-  ratingText: { fontSize: '0.75rem', color: '#888', marginLeft: '4px', fontWeight: '500' },
-
-  // Precio y Footer
-  priceContainer: {
-    marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-    display: 'flex', flexDirection: 'column', gap: '8px'
-  },
-  priceRow: { display: 'flex', alignItems: 'baseline', gap: '8px' },
-  price: {
-    fontSize: '1.3rem', fontWeight: '800',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-  },
-  offerPrice: { fontSize: '1.3rem', fontWeight: '800', color: '#ff6b6b' },
-  fictitiousPrice: { fontSize: '0.85rem', color: '#666', textDecoration: 'line-through' },
-  conversion: { fontSize: '0.75rem', color: '#666', fontStyle: 'italic' },
-
-  // Botón Centrado
-  addToCartButton: {
-    width: '100%', 
-    padding: '10px 0', 
-    border: 'none', borderRadius: '10px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white',
-    fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', 
-    display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'center',
-    transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden', marginTop: '4px',
-    boxSizing: 'border-box'
-  },
-  addToCartButtonHover: { transform: 'translateY(-2px)', boxShadow: '0 8px 20px rgba(102, 126, 234, 0.3)' },
-  
-  buttonGlow: {
-    position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
-    transition: 'left 0.5s ease'
-  },
-  buttonGlowHover: { left: '100%' },
-
-  outOfStockText: {
-    width: '100%', padding: '10px 0', 
-    background: 'rgba(255, 107, 107, 0.1)', color: '#ff6b6b',
-    fontSize: '0.9rem', fontWeight: '700', textAlign: 'center', borderRadius: '10px',
-    border: '1px solid rgba(255, 107, 107, 0.3)', 
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-    boxSizing: 'border-box'
-  },
-
-  // MODALES INFO
-  modalOverlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-    background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', 
-    zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
-  },
-  modalContent: {
-    background: '#1a1a1a', borderRadius: '16px', padding: '30px', width: '100%', maxWidth: '450px', 
-    border: '1px solid rgba(255,255,255,0.1)', position: 'relative', color: '#e0e0e0',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-  },
-  modalClose: {
-    position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', 
-    color: '#888', cursor: 'pointer', fontSize: '1.2rem'
-  },
-  modalTitle: {
-    fontSize: '1.2rem', fontWeight: '700', marginBottom: '15px', color: '#fff', 
-    display: 'flex', alignItems: 'center', gap: '10px'
-  },
-  modalBody: {
-    fontSize: '0.9rem', lineHeight: '1.6', color: '#ccc', whiteSpace: 'pre-line'
-  }
-};
-
+// --- COMPONENTE ESTRELLAS ---
 const RatingStars = ({ rating }) => {
   if (!rating) return null;
   const fullStars = Math.floor(rating);
   const hasHalf = rating % 1 >= 0.5;
   const empty = 5 - fullStars - (hasHalf ? 1 : 0);
-
+  
   return (
-    <div style={styles.ratingContainer}>
-      {[...Array(fullStars)].map((_, i) => <FiStar key={`f-${i}`} size={10} style={styles.starFilled} />)}
-      {hasHalf && <FiStar size={10} style={{ ...styles.starFilled, clipPath: 'inset(0 50% 0 0)' }} />}
-      {[...Array(empty)].map((_, i) => <FiStar key={`e-${i}`} size={10} style={styles.starEmpty} />)}
-      <span style={styles.ratingText}>{parseFloat(rating).toFixed(1)}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginTop: '4px' }}>
+      {[...Array(fullStars)].map((_, i) => <FiStar key={`f-${i}`} size={12} fill="#FFD700" color="#FFD700" />)}
+      {hasHalf && <FiStar size={12} style={{ clipPath: 'inset(0 50% 0 0)' }} fill="#FFD700" color="#FFD700" />}
+      {[...Array(empty)].map((_, i) => <FiStar key={`e-${i}`} size={12} fill="none" color="#444" />)}
+      <span style={{ fontSize: '0.7rem', color: '#777', marginLeft: '4px', fontWeight: '500' }}>{parseFloat(rating).toFixed(1)}</span>
     </div>
   );
 };
 
-// --- HELPER: Obtener Estilo del Tipo de Venta ---
-const getTypeBadge = (status) => {
-  switch (status) {
-    case 'en stock':
-      return { text: 'Entrega Inmediata', color: '#2ecc71', icon: <FiZap /> };
-    case 'a pedido':
-      return { text: 'A Pedido (Manual)', color: '#f1c40f', icon: <FiPackage /> };
-    case 'activacion':
-      return { text: 'Activación (Email)', color: '#00c6ff', icon: <FiRefreshCw /> };
-    default:
-      return { text: 'Digital', color: '#a0a0a0', icon: <FiInfo /> };
-  }
+// --- ESTILOS ---
+const styles = {
+  cardWrapper: {
+    textDecoration: 'none', color: 'inherit', display: 'block', height: '100%', position: 'relative',
+  },
+  card: {
+    backgroundColor: '#111', borderRadius: '16px', border: '1px solid #2a2a2a', 
+    display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
+    height: '100%', minHeight: '480px', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.4)', fontFamily: "'Inter', 'Roboto', sans-serif",
+  },
+  cardHover: {
+    transform: 'translateY(-6px)', borderColor: '#444', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+  },
+
+  // CINTA (RIBBON)
+  ribbonWrapper: {
+    position: 'absolute', width: '110px', height: '110px', overflow: 'hidden', top: '-6px', left: '-6px', zIndex: 10,
+  },
+  ribbon: {
+    position: 'absolute', top: '22px', left: '-38px', width: '160px', padding: '8px 0',
+    textAlign: 'center', transform: 'rotate(-45deg)', fontSize: '0.7rem', fontWeight: '900',
+    textTransform: 'uppercase', color: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.6)', letterSpacing: '0.5px',
+  },
+  // Colores Cinta
+  ribbonGreen:  { background: 'linear-gradient(90deg, #16a34a 0%, #22c55e 100%)' }, 
+  ribbonYellow: { background: 'linear-gradient(90deg, #ca8a04 0%, #eab308 100%)', color: '#000' },
+  ribbonBlue:   { background: 'linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%)' },
+  ribbonRed:    { background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 100%)' },
+
+  // SIDEBAR
+  sidebar: {
+    position: 'absolute', top: '12px', right: '12px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px',
+  },
+  sidebarBtn: {
+    width: '36px', height: '36px', borderRadius: '50%', 
+    background: 'rgba(30, 30, 30, 0.8)', border: '1px solid rgba(255,255,255,0.4)',
+    backdropFilter: 'blur(4px)', color: '#fff', 
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+  },
+  sidebarBtnHover: {
+    background: '#fff', color: '#000', transform: 'scale(1.1)', borderColor: '#fff'
+  },
+
+  // IMAGEN
+  imageArea: {
+    height: '190px', background: 'radial-gradient(circle, #1f1f1f 0%, #0d0d0d 100%)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    position: 'relative', borderBottom: '1px solid #222', padding: '10px',
+  },
+  image: {
+    width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.4s ease', filter: 'drop-shadow(0 5px 15px rgba(0,0,0,0.4))'
+  },
+  
+  // BADGES (OFERTA / NUEVO)
+  badgeContainer: {
+    position: 'absolute', bottom: '10px', left: '12px', display: 'flex', gap: '6px', zIndex: 5,
+  },
+  badge: {
+    padding: '4px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: '800',
+    textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.3)', letterSpacing: '0.5px',
+  },
+  pillOffer: { background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)', color: '#000', border: 'none' },
+  pillDiscount: { background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)', color: '#fff' },
+  pillNew: { background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)', color: '#fff' },
+
+  // BODY
+  body: { padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' },
+  category: { fontSize: '0.65rem', color: '#818cf8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' },
+  title: {
+    fontSize: '1rem', fontWeight: '700', color: '#fff', lineHeight: '1.4', marginBottom: '8px',
+    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.8em'
+  },
+
+  // GRID INFO
+  infoGrid: {
+    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px',
+    marginTop: 'auto', marginBottom: '16px', paddingTop: '16px', borderTop: '1px dashed #333',
+  },
+  colLeft: { display: 'flex', flexDirection: 'column', borderRight: '1px solid #222', paddingRight: '10px' },
+  
+  // STOCK STYLES
+  stockLabel: { fontSize: '0.7rem', color: '#666', marginBottom: '4px', fontWeight: '600', textTransform: 'uppercase' },
+  stockValue: { fontWeight: 'bold' },
+  stockRed: { color: '#ef4444' }, // Rojo para 0
+  stockGreen: { color: '#4ade80' }, // Verde para > 0
+  
+  priceMain: { 
+    fontSize: '1.6rem', fontWeight: '900', 
+    background: 'linear-gradient(90deg, #fff, #ccc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+    lineHeight: '1', marginTop: '4px' 
+  },
+  priceSub: { fontSize: '0.75rem', color: '#888', marginTop: '2px', fontStyle: 'italic' },
+
+  colRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', textAlign: 'right' },
+  provider: { fontSize: '0.7rem', color: '#aaa', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px' },
+
+  // TOOLTIP STYLES
+  tooltipWrapper: { position: 'relative', display: 'inline-block' },
+  statusBadge: {
+    padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700',
+    display: 'flex', alignItems: 'center', gap: '6px', cursor: 'help', transition: '0.2s',
+  },
+  statusRenewable: { background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' },
+  statusNoRenewable: { background: 'rgba(234, 179, 8, 0.15)', color: '#fbbf24', border: '1px solid rgba(234, 179, 8, 0.3)' },
+  
+  tooltipBox: {
+    position: 'absolute', bottom: '120%', right: 0, width: '200px',
+    background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '8px',
+    padding: '10px', fontSize: '0.7rem', lineHeight: '1.4', zIndex: 100,
+    boxShadow: '0 10px 20px rgba(0,0,0,0.5)', pointerEvents: 'none', textAlign: 'left',
+  },
+  tooltipArrow: {
+    position: 'absolute', bottom: '-5px', right: '15px', width: '10px', height: '10px',
+    background: '#222', borderRight: '1px solid #444', borderBottom: '1px solid #444', transform: 'rotate(45deg)',
+  },
+  oldPrice: { fontSize: '0.7rem', color: '#555', textDecoration: 'line-through', marginTop: '6px' },
+
+  // BOTÓN
+  btnContainer: { width: '100%' },
+  addToCartButton: {
+    width: '100%', padding: '12px 0', border: 'none', 
+    borderRadius: '50px', 
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+    color: 'white', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', 
+    display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center',
+    transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden',
+    boxShadow: '0 5px 15px rgba(102, 126, 234, 0.3)',
+  },
+  addToCartButtonHover: { 
+    transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(102, 126, 234, 0.5)', filter: 'brightness(1.1)'
+  },
+  btnDisabled: {
+    width: '100%', padding: '12px 0', borderRadius: '50px',
+    background: 'rgba(50, 50, 50, 0.5)', color: '#888', // Fondo gris oscuro, texto gris
+    border: '1px solid #444',
+    cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '700',
+    textTransform: 'uppercase'
+  },
+  
+  // MODALES
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
+  modalContent: { background: '#181818', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '100%', maxWidth: '420px', color: '#eee' },
+  modalClose: { float: 'right', background: 'transparent', border: 'none', color: '#777', fontSize: '1.5rem', cursor: 'pointer' },
+  modalTitle: { margin: '0 0 15px 0', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '10px', color: '#fff' },
+  modalBody: { fontSize: '0.95rem', lineHeight: '1.6', color: '#bbb', whiteSpace: 'pre-line' }
 };
 
 const ProductCard = ({ product }) => {
-  // Usamos el contexto del carrito directamente aquí
   const { addToCart } = useCart();
+  const [hover, setHover] = useState(false);
+  const [btnHover, setBtnHover] = useState(false);
+  const [hoverTooltip, setHoverTooltip] = useState(false);
+  const [hoverSidebar, setHoverSidebar] = useState(null); 
   
-  // Estado fijo del dólar
-  const exchangeRate = TIPO_DE_CAMBIO;
-  
-  const [hoverStates, setHoverStates] = useState({});
   const [showDetails, setShowDetails] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  
-  // Estado para el Modal de Compra
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-
-  const handleHover = (key, state) => setHoverStates(prev => ({ ...prev, [key]: state }));
-
-  // Abre el modal de compra
-  const handleOpenPurchaseModal = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsPurchaseModalOpen(true);
-  };
-
-  // Cierra el modal de compra
-  const handleClosePurchaseModal = () => {
-    setIsPurchaseModalOpen(false);
-  };
-
-  // Acción final de agregar al carrito (viene desde el PurchaseModal)
-  const handleConfirmAddToCart = (data) => {
-    addToCart(data.product, {
-      customerName: data.customerName,
-      customerPhone: data.customerPhone,
-    });
-    setIsPurchaseModalOpen(false);
-  };
-
-  const openDetails = (e) => {
-      e.preventDefault(); e.stopPropagation();
-      setShowDetails(true);
-  };
-  const openTerms = (e) => {
-      e.preventDefault(); e.stopPropagation();
-      setShowTerms(true);
-  };
-
-  const getConversion = (usd) => <span style={styles.conversion}>~ S/ {(usd * exchangeRate).toFixed(2)}</span>;
-
-  const renderPrice = () => {
-    const { offer_price_usd, price_usd, fictitious_price_usd } = product;
-    if (offer_price_usd) {
-      return (
-        <>
-          <div style={styles.priceRow}>
-            <span style={styles.offerPrice}>${offer_price_usd}</span>
-            <span style={styles.fictitiousPrice}>${price_usd}</span>
-          </div>
-          {getConversion(offer_price_usd)}
-        </>
-      );
-    }
-    const finalPrice = price_usd;
-    const originalPrice = fictitious_price_usd;
-    return (
-      <>
-        <div style={styles.priceRow}>
-          <span style={styles.price}>${finalPrice}</span>
-          {originalPrice && <span style={styles.fictitiousPrice}>${originalPrice}</span>}
-        </div>
-        {getConversion(finalPrice)}
-      </>
-    );
-  };
 
   if (!product) return null;
 
-  const hasOffer = !!product.offer_price_usd;
-  const isLastStock = product.tags?.includes('ultimo stock');
-  const stock = product.stock_quantity || 0;
+  // --- LÓGICA DE STOCK (CORREGIDA) ---
+  const stock = parseInt(product.stock_quantity || 0); // Asegurar que sea número
   
-  // Determinamos si está agotado
-  const isOutOfStock = product.status === 'agotado' || (stock === 0 && ['en stock', 'a pedido', 'activacion'].includes(product.status));
+  // REGLA DE ORO: Si stock <= 0, es AGOTADO. No importa el status.
+  const isTrulyOutOfStock = stock <= 0 || product.status === 'agotado';
 
-  // --- LOGICA DE ETIQUETAS DE STOCK ---
-  let statusTag = null;
-  if (isOutOfStock) {
-    statusTag = <div style={{...styles.tag, ...styles.tagRed}}><FiAlertCircle /> Agotado</div>;
+  // --- LÓGICA DE CINTA (RIBBON) ---
+  // Prioridad: 1. Stock 0 (Agotado), 2. Status específico, 3. En Stock por defecto
+  let ribbonConf = { text: 'EN STOCK', style: styles.ribbonGreen };
+
+  if (isTrulyOutOfStock) {
+    ribbonConf = { text: 'AGOTADO', style: styles.ribbonRed };
   } else if (product.status === 'a pedido') {
-    statusTag = <div style={{...styles.tag, ...styles.tagYellow}}><FiPackage /> A Pedido: {stock}</div>;
+    ribbonConf = { text: 'A PEDIDO', style: styles.ribbonYellow };
   } else if (product.status === 'activacion') {
-    statusTag = <div style={{...styles.tag, ...styles.tagBlue}}><FiZap /> Activación: {stock}</div>;
-  } else if (product.status === 'en stock') {
-    statusTag = <div style={{...styles.tag, ...styles.tagGreen}}><FiCheck /> Stock: {stock}</div>;
+    ribbonConf = { text: 'ACTIVACIÓN', style: styles.ribbonBlue };
   }
+
+  // --- DATOS PRECIOS ---
+  const hasOffer = !!product.offer_price_usd;
+  const finalPrice = hasOffer ? product.offer_price_usd : product.price_usd;
+  const oldPrice = hasOffer ? (product.fictitious_price_usd || product.price_usd) : product.fictitious_price_usd;
+  const discountPercent = oldPrice ? Math.round(((oldPrice - finalPrice) / oldPrice) * 100) : 0;
+  const renewalPrice = product.renewal_price_usd ? product.renewal_price_usd : finalPrice;
+
+  // --- TOOLTIP RENOVACIÓN ---
+  const isRenewable = product.has_renewal;
+  const tooltipText = isRenewable 
+      ? `Este pedido puede ser renovado por $${renewalPrice} para poder usar la misma cuenta comprada.`
+      : `Este pedido no tiene renovación, activo solo los dias que estan indicados (${product.duration_days || '?'}), luego tendra que volver a comprarlo.`;
+
+  // Handlers
+  const handleAddToCart = (e) => { e.preventDefault(); setIsPurchaseModalOpen(true); };
+  const confirmAddToCart = (data) => {
+    addToCart(data.product, { customerName: data.customerName, customerPhone: data.customerPhone });
+    setIsPurchaseModalOpen(false);
+  };
 
   return (
     <>
       <Link 
         to={`/producto/${product.slug}`} 
-        style={styles.cardLink}
-        onMouseEnter={() => handleHover('card', true)}
-        onMouseLeave={() => handleHover('card', false)}
+        style={styles.cardWrapper}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
       >
-        <article style={{...styles.card, ...(hoverStates.card && styles.cardHover)}}>
+        <article style={{...styles.card, ...(hover && styles.cardHover)}}>
           
-          {/* IMAGEN */}
-          <div style={styles.imageContainer}>
-            <img 
-              src={product.image_url || 'https://placehold.co/600x400/ffffff/667eea?text=Producto'} 
-              alt={product.name} 
-              style={{...styles.image, ...(hoverStates.card && styles.imageHover)}} 
-              onError={(e) => e.target.src='https://placehold.co/600x400/ffffff/667eea?text=Producto'}
-            />
-            <div style={styles.tags}>
-              {hasOffer && <div style={{...styles.tag, ...styles.tagOffer}}><FiTag /> Oferta</div>}
-              {isLastStock && <div style={{...styles.tag, ...styles.tagUltimos}}><FiZap /> Últimos</div>}
-              {statusTag}
+          {/* CINTA SUPERIOR */}
+          <div style={styles.ribbonWrapper}>
+            <div style={{...styles.ribbon, ...ribbonConf.style}}>
+              {ribbonConf.text}
             </div>
           </div>
 
-          {/* DETALLES */}
-          <div style={styles.content}>
-            <div style={styles.providerSection}>
-              <div style={styles.providerInfo}>
-                <span style={styles.category}>{product.category_name || 'Digital'}</span>
-                <span style={styles.providerName}>
-                  <FiUser size={10} color="#a0a0a0"/> {product.provider_name || 'Oficial'}
-                </span>
-              </div>
-              <RatingStars rating={product.provider_rating} />
-            </div>
+          {/* SIDEBAR ICONOS */}
+          <div style={styles.sidebar}>
+            <button 
+                onClick={(e)=>{e.preventDefault(); setShowDetails(true)}} 
+                style={{...styles.sidebarBtn, ...(hoverSidebar === 'details' && styles.sidebarBtnHover)}} 
+                onMouseEnter={() => setHoverSidebar('details')}
+                onMouseLeave={() => setHoverSidebar(null)}
+                title="Ver Detalles"
+            >
+              <FiInfo size={18}/>
+            </button>
+            <button 
+                onClick={(e)=>{e.preventDefault(); setShowTerms(true)}} 
+                style={{...styles.sidebarBtn, ...(hoverSidebar === 'terms' && styles.sidebarBtnHover)}} 
+                onMouseEnter={() => setHoverSidebar('terms')}
+                onMouseLeave={() => setHoverSidebar(null)}
+                title="Términos"
+            >
+              <FiFileText size={18}/>
+            </button>
+          </div>
+
+          {/* IMAGEN Y BADGES */}
+          <div style={styles.imageArea}>
+            <img 
+              src={product.image_url || 'https://via.placeholder.com/300?text=Digital'} 
+              alt={product.name} 
+              style={{...styles.image, transform: hover ? 'scale(1.08)' : 'scale(1)'}}
+            />
             
-            <h3 style={styles.name}>{product.name}</h3>
-
-            {/* BOTONES DE INFORMACIÓN */}
-            <div style={styles.infoButtons}>
-                <button 
-                    onClick={openDetails} 
-                    style={{...styles.infoBtn, ...(hoverStates.details ? styles.infoBtnHover : {})}}
-                    onMouseEnter={() => handleHover('details', true)}
-                    onMouseLeave={() => handleHover('details', false)}
-                >
-                    <FiInfo size={12} /> Detalles
-                </button>
-                <button 
-                    onClick={openTerms} 
-                    style={{...styles.infoBtn, ...(hoverStates.terms ? styles.infoBtnHover : {})}}
-                    onMouseEnter={() => handleHover('terms', true)}
-                    onMouseLeave={() => handleHover('terms', false)}
-                >
-                    <FiShield size={12} /> Términos
-                </button>
-            </div>
-
-            <div style={styles.details}>
-              {product.duration_days && <div style={styles.detailItem}><FiClock size={12}/> {product.duration_days} días</div>}
-              {product.has_renewal && product.renewal_price_usd && (
-                 <div style={styles.renewal}><FiRefreshCw size={12}/> Renovable (${product.renewal_price_usd})</div>
-              )}
-            </div>
-
-            <div style={styles.priceContainer}>
-              {renderPrice()}
-              
-              {!isOutOfStock ? (
-                <button 
-                  onClick={handleOpenPurchaseModal}
-                  style={{...styles.addToCartButton, ...(hoverStates.cartBtn && styles.addToCartButtonHover)}}
-                  onMouseEnter={() => handleHover('cartBtn', true)}
-                  onMouseLeave={() => handleHover('cartBtn', false)}
-                >
-                  <div style={{...styles.buttonGlow, ...(hoverStates.cartBtn && styles.buttonGlowHover)}} />
-                  <FiShoppingCart size={16} /> Agregar al Carrito
-                </button>
+            <div style={styles.badgeContainer}>
+              {hasOffer ? (
+                  <div style={{...styles.badge, ...styles.pillOffer}}>
+                      <FiTag /> OFERTA
+                  </div>
               ) : (
-                <div style={styles.outOfStockText}>
-                  <FiAlertCircle size={16} /> Sin Stock
+                  <div style={{...styles.badge, ...styles.pillNew}}>
+                      NUEVO
+                  </div>
+              )}
+              {discountPercent > 0 && (
+                <div style={{...styles.badge, ...styles.pillDiscount}}>
+                    -{discountPercent}%
                 </div>
               )}
             </div>
           </div>
+
+          {/* CONTENIDO */}
+          <div style={styles.body}>
+            <div style={styles.category}>{product.category_name || 'DIGITAL'}</div>
+            <h3 style={styles.title}>{product.name}</h3>
+            <RatingStars rating={product.provider_rating || 5} />
+
+            <div style={styles.infoGrid}>
+              
+              {/* IZQUIERDA: PRECIO Y STOCK */}
+              <div style={styles.colLeft}>
+                <div style={styles.stockLabel}>
+                  {/* COLOR CONDICIONAL DEL STOCK */}
+                  Stock: <span style={{...styles.stockValue, ...(stock > 0 ? styles.stockGreen : styles.stockRed)}}>{stock} und.</span>
+                </div>
+                <div>
+                   <div style={styles.priceMain}>${finalPrice}</div>
+                   <div style={styles.priceSub}>S/ {(finalPrice * TIPO_DE_CAMBIO).toFixed(2)}</div>
+                </div>
+              </div>
+
+              {/* DERECHA: PROVEEDOR Y RENOVACIÓN */}
+              <div style={styles.colRight}>
+                <div style={styles.provider}><FiUser size={12}/> {product.provider_name || 'Oficial'}</div>
+                
+                <div 
+                   style={styles.tooltipWrapper}
+                   onMouseEnter={() => setHoverTooltip(true)}
+                   onMouseLeave={() => setHoverTooltip(false)}
+                >
+                    {isRenewable ? (
+                        <div style={{...styles.statusBadge, ...styles.statusRenewable}}>
+                             <FiRefreshCw size={12}/> Renovable: ${renewalPrice}
+                        </div>
+                    ) : (
+                        <div style={{...styles.statusBadge, ...styles.statusNoRenewable}}>
+                             <FiAlertTriangle size={12}/> Sin Renovación
+                        </div>
+                    )}
+
+                    {hoverTooltip && (
+                        <div style={styles.tooltipBox}>
+                            {tooltipText}
+                            <div style={styles.tooltipArrow}></div>
+                        </div>
+                    )}
+                </div>
+
+                {oldPrice && <div style={styles.oldPrice}>Antes: ${oldPrice}</div>}
+              </div>
+            </div>
+          </div>
+
+          {/* BOTÓN BLOQUEADO SI NO HAY STOCK */}
+          <div style={styles.btnContainer}>
+            {!isTrulyOutOfStock ? (
+                <button 
+                    onClick={handleAddToCart}
+                    style={{...styles.addToCartButton, ...(btnHover && styles.addToCartButtonHover)}}
+                    onMouseEnter={() => setBtnHover(true)}
+                    onMouseLeave={() => setBtnHover(false)}
+                >
+                    <FiShoppingCart size={18} /> AGREGAR AL CARRITO
+                </button>
+            ) : (
+                <div style={styles.btnDisabled}>
+                    <FiX size={18} /> SIN STOCK
+                </div>
+            )}
+          </div>
+
         </article>
       </Link>
 
-      {/* --- MODAL DE COMPRA (El mismo de ProductPage) --- */}
-      {isPurchaseModalOpen && (
-        // El div wrapper detiene la propagación al hacer clic fuera del contenido del modal pero dentro del overlay
-        <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-            <PurchaseModal
-              product={product}
-              onClose={handleClosePurchaseModal}
-              onAddToCart={handleConfirmAddToCart}
-            />
-        </div>
-      )}
-
-      {/* MODAL DETALLES */}
+      {/* MODALES */}
       {showDetails && (
-        <div style={styles.modalOverlay} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDetails(false); }}>
-            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-                <button style={styles.modalClose} onClick={() => setShowDetails(false)}><FiX /></button>
-                <h3 style={styles.modalTitle}><FiInfo color="#00BFFF" /> Detalles del Producto</h3>
-                <div style={styles.modalBody}>
-                    {product.description || "No hay descripción disponible."}
-                </div>
-            </div>
+        <div style={styles.modalOverlay} onClick={(e) => {e.preventDefault(); setShowDetails(false)}}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <button style={styles.modalClose} onClick={() => setShowDetails(false)}><FiX/></button>
+            <h3 style={styles.modalTitle}><FiInfo color="#818cf8"/> Detalles</h3>
+            <div style={styles.modalBody}>{product.description || "Sin descripción."}</div>
+          </div>
         </div>
       )}
-
-      {/* MODAL TÉRMINOS */}
       {showTerms && (
-        <div style={styles.modalOverlay} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTerms(false); }}>
-            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-                <button style={styles.modalClose} onClick={() => setShowTerms(false)}><FiX /></button>
-                <h3 style={styles.modalTitle}><FiShield color="#2ecc71" /> Términos y Condiciones</h3>
-                <div style={styles.modalBody}>
-                    {product.terms_conditions || "Garantía estándar de funcionamiento."}
-                </div>
-            </div>
+        <div style={styles.modalOverlay} onClick={(e) => {e.preventDefault(); setShowTerms(false)}}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <button style={styles.modalClose} onClick={() => setShowTerms(false)}><FiX/></button>
+            <h3 style={styles.modalTitle}><FiFileText color="#10b981"/> Términos</h3>
+            <div style={styles.modalBody}>{product.terms_conditions || "Garantía de funcionamiento."}</div>
+          </div>
+        </div>
+      )}
+      {isPurchaseModalOpen && (
+        <div onClick={(e) => {e.preventDefault(); e.stopPropagation()}}>
+          <PurchaseModal product={product} onClose={() => setIsPurchaseModalOpen(false)} onAddToCart={confirmAddToCart} />
         </div>
       )}
     </>
