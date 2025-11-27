@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '/src/services/apiClient';
-import { FiUsers, FiCheck, FiX, FiEdit, FiRefreshCw, FiShield, FiGrid } from 'react-icons/fi';
+import { 
+  FiUsers, FiCheck, FiX, FiEdit, FiRefreshCw, FiShield, FiGrid, 
+  FiCheckCircle, FiAlertTriangle 
+} from 'react-icons/fi';
 
 // --- Estilos Unified Compact Theme (Dark Glass) ---
 const styles = {
@@ -64,13 +67,20 @@ const styles = {
     transition: 'all 0.2s'
   },
 
-  // Modal
+  // Modal Principal
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
   modalContent: { background: '#1a1a1a', borderRadius: '16px', padding: '30px', width: '100%', maxWidth: '600px', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' },
   modalTitle: { fontSize: '1.5rem', fontWeight: '700', marginBottom: '8px', color: '#fff' },
   modalSubtitle: { fontSize: '0.9rem', color: '#aaa', marginBottom: '24px' },
   modalCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '1.5rem' },
 
+  // Modal Feedback (Success/Error)
+  feedbackOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
+  feedbackContent: { background: '#1f1f1f', borderRadius: '20px', padding: '40px 30px', width: '100%', maxWidth: '380px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
+  feedbackTitle: { fontSize: '1.4rem', fontWeight: '700', marginTop: '16px', marginBottom: '8px', color: '#fff' },
+  feedbackText: { fontSize: '0.95rem', color: '#aaa', marginBottom: '24px', lineHeight: '1.5' },
+  feedbackButton: { padding: '12px 30px', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', transition: '0.2s', width: '100%' },
+  
   // Elementos del Modal
   permissionGroup: { marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' },
   groupTitle: { fontSize: '1rem', fontWeight: '600', color: '#e0e0e0', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' },
@@ -79,7 +89,6 @@ const styles = {
   
   limitInputWrapper: { marginTop: '10px', marginLeft: '26px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' },
   limitLabel: { display: 'block', fontSize: '0.8rem', color: '#aaa', marginBottom: '4px' },
-  // Estilo actualizado para el input numérico
   limitInput: { width: '100px', padding: '8px', borderRadius: '6px', border: '1px solid #444', background: '#222', color: '#fff', fontSize: '0.9rem' },
 
   categoryList: { maxHeight: '200px', overflowY: 'auto', paddingRight: '4px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' },
@@ -103,6 +112,9 @@ const ProviderManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Nuevo estado para el Modal de Feedback
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' });
 
   const [modalSettings, setModalSettings] = useState({
     can_recharge: false,
@@ -133,7 +145,6 @@ const ProviderManagement = () => {
       can_recharge: provider.can_recharge,
       can_affiliate: provider.can_affiliate,
       allowed_category_ids: [...provider.allowed_category_ids],
-      // CORRECCIÓN: Aseguramos que sea un número, o 0 por defecto
       affiliate_limit: parseInt(provider.affiliate_limit) || 0,
     });
     setShowModal(true);
@@ -145,18 +156,18 @@ const ProviderManagement = () => {
     setIsSaving(false);
   };
 
+  const handleCloseFeedback = () => {
+    setFeedback({ ...feedback, show: false });
+  };
+
   const handlePermissionChange = (e) => {
     const { name, checked } = e.target;
     setModalSettings(prev => ({ ...prev, [name]: checked }));
   };
 
-  // --- NUEVO HANDLER PARA EL NÚMERO ---
-  // Evita problemas con el 0 inicial y permite borrar el campo
   const handleLimitChange = (e) => {
       const val = e.target.value;
-      // Si el campo está vacío, guardamos 0. Si no, el número entero.
       const numVal = val === '' ? 0 : parseInt(val);
-      
       setModalSettings(prev => ({
           ...prev,
           affiliate_limit: isNaN(numVal) ? 0 : numVal
@@ -177,11 +188,22 @@ const ProviderManagement = () => {
     setIsSaving(true);
     try {
       await apiClient.put(`/admin/provider-settings/${selectedProvider.id}`, modalSettings);
-      alert('✅ Configuración guardada.');
+      
       handleCloseModal();
+      
+      setFeedback({
+        show: true,
+        type: 'success',
+        message: 'La configuración del proveedor se ha actualizado correctamente.'
+      });
+      
       fetchData();
     } catch (err) {
-      alert('❌ Error al guardar.');
+      setFeedback({
+        show: true,
+        type: 'error',
+        message: 'Hubo un problema al intentar guardar los cambios. Inténtalo de nuevo.'
+      });
       setIsSaving(false);
     }
   };
@@ -195,6 +217,24 @@ const ProviderManagement = () => {
 
   return (
     <div style={styles.container}>
+      {/* INYECCIÓN DE ESTILOS CSS PARA ANIMACIONES 
+        Esto permite usar keyframes sin archivos CSS externos 
+      */}
+      <style>{`
+        @keyframes scaleUp {
+          0% { transform: scale(0); opacity: 0; }
+          60% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+      `}</style>
+
       <div style={styles.backgroundDecoration} />
       
       <div style={styles.headerSection}>
@@ -264,7 +304,7 @@ const ProviderManagement = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal de Configuración */}
       {showModal && selectedProvider && (
         <div style={styles.modalOverlay} onClick={handleCloseModal}>
           <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
@@ -288,12 +328,10 @@ const ProviderManagement = () => {
               {modalSettings.can_affiliate && (
                 <div style={styles.limitInputWrapper}>
                     <label style={styles.limitLabel}>Cupo de Activaciones:</label>
-                    
-                    {/* INPUT CORREGIDO */}
                     <input 
                       type="number" 
                       min="0" 
-                      value={modalSettings.affiliate_limit.toString()} // Forzar string para evitar líos de input
+                      value={modalSettings.affiliate_limit.toString()} 
                       onChange={handleLimitChange}
                       style={styles.limitInput}
                     />
@@ -325,6 +363,55 @@ const ProviderManagement = () => {
 
             <button style={styles.saveButton} onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Feedback con ANIMACIONES */}
+      {feedback.show && (
+        <div style={styles.feedbackOverlay} onClick={handleCloseFeedback}>
+          <div style={styles.feedbackContent} onClick={e => e.stopPropagation()}>
+            {feedback.type === 'success' ? (
+              <FiCheckCircle 
+                size={64} 
+                color="#2ecc71" 
+                style={{ 
+                  marginBottom: 10,
+                  // Animación de "Pop" suave
+                  animation: 'scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' 
+                }} 
+              />
+            ) : (
+              <FiAlertTriangle 
+                size={64} 
+                color="#e74c3c" 
+                style={{ 
+                  marginBottom: 10,
+                  // Animación de "Sacudida" para error
+                  animation: 'shake 0.4s ease-in-out forwards'
+                }} 
+              />
+            )}
+            
+            <h3 style={styles.feedbackTitle}>
+              {feedback.type === 'success' ? '¡Éxito!' : 'Error'}
+            </h3>
+            
+            <p style={styles.feedbackText}>{feedback.message}</p>
+            
+            <button 
+              onClick={handleCloseFeedback}
+              style={{
+                ...styles.feedbackButton,
+                background: feedback.type === 'success' 
+                  ? 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)' 
+                  : 'rgba(255,255,255,0.1)',
+                color: feedback.type === 'success' ? '#fff' : '#e0e0e0',
+                border: feedback.type === 'success' ? 'none' : '1px solid #444'
+              }}
+            >
+              Entendido
             </button>
           </div>
         </div>
