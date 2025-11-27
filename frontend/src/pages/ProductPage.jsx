@@ -11,22 +11,23 @@ import {
   FiArrowLeft, FiShield, FiTruck, FiZap, FiBox
 } from 'react-icons/fi';
 
-// --- Estilos Unified Compact Theme (Dark Glass - Detail Page) ---
+// --- Estilos Unified Compact Theme (Responsive Fix) ---
 const styles = {
   container: { 
-    padding: '40px 20px', 
+    padding: '20px 5%', // Margen dinámico (5%) en lugar de fijo
     fontFamily: "'Inter', sans-serif", 
     background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
     minHeight: '100vh',
     position: 'relative',
-    overflow: 'hidden',
+    overflowX: 'hidden', // Evita scroll horizontal indeseado
     color: '#e0e0e0',
     display: 'flex',
     justifyContent: 'center'
   },
   backgroundDecoration: {
     position: 'absolute', top: 0, right: 0, width: '600px', height: '600px',
-    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%)', zIndex: 0
+    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.15) 0%, transparent 70%)', zIndex: 0,
+    pointerEvents: 'none' // Importante para que no bloquee clicks
   },
   
   contentWrapper: {
@@ -43,10 +44,12 @@ const styles = {
     cursor: 'pointer'
   },
 
-  // Grid Principal
+  // Grid Principal (CORREGIDO)
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+    // Cambio clave: minmax(290px) permite que entre en móviles pequeños (iPhone SE, etc)
+    // Antes 350px forzaba el scroll horizontal.
+    gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
     gap: '40px',
     alignItems: 'start'
   },
@@ -57,16 +60,18 @@ const styles = {
     backdropFilter: 'blur(20px)',
     borderRadius: '24px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
-    padding: '30px',
+    padding: '20px', // Reducido un poco para móviles
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
     position: 'relative',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    minHeight: '300px'
   },
   productImage: {
     width: '100%',
+    height: 'auto', // Mantiene proporción
     maxHeight: '450px',
     objectFit: 'contain',
     filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))',
@@ -88,22 +93,29 @@ const styles = {
     padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '700',
     textTransform: 'uppercase', letterSpacing: '1px', display: 'inline-block', marginBottom: '12px'
   },
+  // Título Responsive usando clamp()
   title: {
-    fontSize: '2.5rem', fontWeight: '800', color: '#fff', margin: '0 0 8px 0', lineHeight: 1.2
+    fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', // Se adapta entre 1.8 y 2.5rem
+    fontWeight: '800', color: '#fff', margin: '0 0 8px 0', lineHeight: 1.2
   },
   providerLink: {
     display: 'flex', alignItems: 'center', gap: '6px', color: '#a0a0a0', fontSize: '0.95rem',
-    textDecoration: 'none', transition: 'color 0.2s'
+    textDecoration: 'none', transition: 'color 0.2s', flexWrap: 'wrap'
   },
 
   // Precio y Stock
   priceStockRow: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px',
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    flexWrap: 'wrap', // Permite que caiga en móviles
+    gap: '16px',
     background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)'
   },
   priceWrapper: { display: 'flex', flexDirection: 'column' },
   mainPrice: {
-    fontSize: '2.2rem', fontWeight: '800',
+    fontSize: 'clamp(1.8rem, 4vw, 2.2rem)', // Precio responsive
+    fontWeight: '800',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
   },
@@ -111,10 +123,12 @@ const styles = {
   conversion: { fontSize: '0.9rem', color: '#888', fontStyle: 'italic', marginTop: '4px' },
   
   badgesWrapper: {
-      display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px'
+      display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px',
+      flexGrow: 1 // Ocupa el espacio restante
   },
   stockBadge: {
-    padding: '8px 16px', borderRadius: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem'
+    padding: '8px 16px', borderRadius: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem',
+    whiteSpace: 'nowrap' // Evita que el texto del badge se rompa feo
   },
   inStock: { background: 'rgba(39, 174, 96, 0.2)', color: '#2ecc71', border: '1px solid rgba(39, 174, 96, 0.3)' },
   outOfStock: { background: 'rgba(220, 53, 69, 0.2)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)' },
@@ -136,15 +150,21 @@ const styles = {
     transition: 'left 0.5s ease'
   },
 
-  // Detalles
-  detailsGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '10px' },
+  // Detalles Grid (CORREGIDO)
+  detailsGrid: { 
+    display: 'grid', 
+    // Se adapta automáticamente: 2 columnas en PC, 1 en móvil
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+    gap: '16px', 
+    marginTop: '10px' 
+  },
   detailItem: {
     background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px',
     display: 'flex', alignItems: 'center', gap: '12px', border: '1px solid rgba(255,255,255,0.05)'
   },
-  detailIcon: { color: '#667eea', fontSize: '20px' },
+  detailIcon: { color: '#667eea', fontSize: '20px', minWidth: '20px' }, // minWidth evita que el icono se aplaste
   detailLabel: { fontSize: '0.8rem', color: '#888', display: 'block' },
-  detailValue: { fontSize: '1rem', color: '#e0e0e0', fontWeight: '600' },
+  detailValue: { fontSize: '1rem', color: '#e0e0e0', fontWeight: '600', wordBreak: 'break-word' },
 
   // Descripción y Términos
   textSection: {
@@ -165,7 +185,7 @@ const styles = {
   // Loading / Error
   centerState: { 
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-    height: '60vh', textAlign: 'center', color: '#a0a0a0' 
+    height: '60vh', textAlign: 'center', color: '#a0a0a0', width: '100%'
   },
   pulse: { animation: 'pulse 2s infinite' }
 };
@@ -243,8 +263,6 @@ const ProductPage = () => {
 
   const isStockAvailable = product.stock_quantity > 0 && product.status !== 'agotado';
   const finalPrice = product.offer_price_usd || product.price_usd;
-  
-  // Obtener datos visuales del tipo de venta
   const typeInfo = getTypeBadge(product.status);
 
   return (
@@ -281,7 +299,7 @@ const ProductPage = () => {
                 <span style={styles.categoryBadge}>{product.category_name || 'Digital'}</span>
                 <h1 style={styles.title}>{product.name}</h1>
                 
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap: 'wrap', gap: '10px'}}>
                     <div style={styles.providerLink}>
                         <FiUser /> Vendido por: <strong style={{color:'#fff', marginLeft:4}}>{product.provider_name}</strong>
                     </div>
@@ -294,7 +312,7 @@ const ProductPage = () => {
              {/* Precio y Stock */}
              <div style={styles.priceStockRow}>
                 <div style={styles.priceWrapper}>
-                    <div style={{display:'flex', alignItems:'baseline'}}>
+                    <div style={{display:'flex', alignItems:'baseline', flexWrap: 'wrap'}}>
                         <span style={styles.mainPrice}>${finalPrice}</span>
                         {(product.offer_price_usd || product.fictitious_price_usd) && (
                             <span style={styles.oldPrice}>
@@ -413,7 +431,7 @@ const ProductPage = () => {
         />
       )}
 
-      {/* Animación CSS global para este componente */}
+      {/* Animación CSS global */}
       <style>
         {`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}
       </style>
