@@ -163,7 +163,7 @@ const HomePage = () => {
        
       <div style={styles.content}>
 
-        {/* Categorías */}
+        {/* Categorías (Iconos pequeños) */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -172,12 +172,12 @@ const HomePage = () => {
             </div>
           </div>
           
-          <div className="custom-grid">
+          <div className="category-grid">
             {categories.map(cat => <CategoryCard category={cat} key={cat.id} />)}
           </div>
         </section>
 
-        {/* Destacados */}
+        {/* Destacados (Sin bordes blancos al pasar mouse) */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -186,7 +186,8 @@ const HomePage = () => {
             </div>
           </div>
           
-          <div className="custom-grid">
+          {/* Se añade la clase 'force-no-border' */}
+          <div className="product-grid force-no-border">
             {products.map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
@@ -199,7 +200,7 @@ const HomePage = () => {
             </div>
           </div>
           
-          <div className="custom-grid">
+          <div className="product-grid force-no-border">
             {products.slice(0, 6).map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
@@ -210,12 +211,6 @@ const HomePage = () => {
 
       </div>
        
-      {/* --- ESTILOS CSS CRÍTICOS ---
-        Aquí está la lógica del responsive:
-        1. Móvil (Default): 1 columna (1fr).
-        2. Tablet: 3 columnas.
-        3. PC: 6 columnas.
-      */}
       <style>{`
         body, html {
             overflow-x: hidden !important;
@@ -223,46 +218,65 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* --- MÓVIL (Por defecto) --- */
-        .custom-grid {
+        /* --- 1. CATEGORÍAS (Pequeñas) --- */
+        .category-grid {
           display: grid;
-          gap: 20px;
-          /* AQUÍ ESTÁ EL CAMBIO: Forzar 1 sola columna en móvil */
-          grid-template-columns: 1fr;
-          justify-items: center; /* Centrar la tarjeta */
-        }
-        
-        /* Aseguramos que la tarjeta no sea excesivamente ancha en móvil */
-        .custom-grid > div, .custom-grid > a {
-            width: 100%;
-            max-width: 400px; /* Limitar el ancho en móvil para que se vea elegante */
+          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Iconos compactos */
         }
 
-        /* --- TABLET (min 600px) --- */
+        /* --- 2. PRODUCTOS (Responsive 1 -> 6 columnas) --- */
+        .product-grid {
+          display: grid;
+          gap: 20px;
+          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
+          justify-items: center;
+        }
+        
+        .product-grid > div, .product-grid > a {
+            width: 100%;
+            max-width: 400px;
+        }
+
         @media (min-width: 600px) {
-          .custom-grid {
-            /* Pasamos a 3 columnas en Tablets */
+          .product-grid {
             grid-template-columns: repeat(3, 1fr); 
             justify-items: stretch;
           }
-           .custom-grid > div, .custom-grid > a {
-            max-width: unset; /* Quitar límite de ancho */
-          }
+           .product-grid > div, .product-grid > a { max-width: unset; }
         }
 
-        /* --- PC Mediana (min 1024px) --- */
         @media (min-width: 1024px) {
-          .custom-grid {
-            grid-template-columns: repeat(4, 1fr);
+          .product-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        @media (min-width: 1400px) {
+          .product-grid { 
+            grid-template-columns: repeat(6, 1fr); /* 6 por fila en PC grande */
           }
         }
 
-        /* --- PC GRANDE (min 1400px) --- */
-        @media (min-width: 1400px) {
-          .custom-grid {
-            /* Tu requisito de 6 por fila en pantalla grande */
-            grid-template-columns: repeat(6, 1fr);
-          }
+        /* --- 3. FUERZA BRUTA PARA QUITAR BORDES BLANCOS AL HOVER --- */
+        
+        /* Esto anula cualquier estilo dentro del ProductCard */
+        .force-no-border > * {
+             border-color: rgba(255, 255, 255, 0.1) !important; /* Mantiene el borde gris suave */
+             transition: transform 0.3s ease !important; /* Mantiene movimiento si quieres, quita si no */
+        }
+
+        /* Al pasar el mouse, FORZAMOS que el borde siga gris y quitamos sombras */
+        .force-no-border > *:hover,
+        .force-no-border > a:hover,
+        .force-no-border > div:hover,
+        .force-no-border .card:hover {
+            border-color: rgba(255, 255, 255, 0.1) !important; /* IMPORTANTE: No cambia a blanco */
+            box-shadow: none !important; /* Quita el resplandor */
+            outline: none !important;
+        }
+
+        /* Selector profundo por si ProductCard tiene una estructura compleja */
+        .force-no-border > * > div:hover {
+            border-color: rgba(255, 255, 255, 0.1) !important;
         }
 
         @media (max-width: 600px) {
