@@ -7,110 +7,70 @@ import CategoryCard from '/src/components/ui/CategoryCard.jsx';
 import PaymentMethods from '/src/components/layout/PaymentMethods.jsx';
 import { 
   FiTrendingUp, FiStar, FiGrid, FiRefreshCw, FiAlertTriangle, 
-  FiArrowRight, FiShoppingBag, FiArrowUp 
+  FiArrowUp
 } from 'react-icons/fi';
 
 const styles = {
   container: {
-    // Asegurar que el contenedor principal no genere scroll horizontal no deseado
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    backgroundColor: '#0c0c0c',
+    backgroundImage: 'radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0c0c0c 70%)',
+    fontFamily: "'Inter', sans-serif",
     color: '#e0e0e0',
     position: 'relative',
-    overflowX: 'hidden' // CLAVE: Previene el scroll horizontal global
-  },
-  backgroundDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.05) 0%, transparent 50%)',
-    zIndex: 0
+    overflowX: 'hidden'
   },
   fullWidthSection: {
     width: '100%',
     position: 'relative',
-    zIndex: 1,
-    marginBottom: '40px',
-    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+    marginBottom: '30px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
   },
   content: {
-    maxWidth: '1400px',
+    maxWidth: '1600px', 
     margin: '0 auto',
-    padding: '0 16px 60px 16px', 
+    padding: '0 20px 60px 20px', 
     position: 'relative',
     zIndex: 1
   },
-  section: { marginBottom: '60px' },
+  section: { marginBottom: '50px' },
   sectionHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
   },
   sectionTitle: {
-    fontSize: '1.8rem', fontWeight: '800', color: '#ffffff', margin: 0, 
-    display: 'flex', alignItems: 'center', gap: '12px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+    fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: 0, 
+    display: 'flex', alignItems: 'center', gap: '10px',
   },
   sectionSubtitle: {
-    fontSize: '1rem', color: '#b0b0b0', margin: '4px 0 0 0', fontWeight: '400', maxWidth: '600px'
+    fontSize: '0.95rem', color: '#888', margin: '4px 0 0 0', fontWeight: '400'
   },
-  viewAllButton: {
-    display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px',
-    background: 'rgba(102, 126, 234, 0.1)', border: '1px solid rgba(102, 126, 234, 0.3)',
-    borderRadius: '12px', color: '#667eea', textDecoration: 'none', fontWeight: '600',
-    fontSize: '0.9rem', transition: 'all 0.3s ease', backdropFilter: 'blur(20px)',
-    position: 'relative', overflow: 'hidden'
-  },
-  viewAllButtonHover: {
-    background: 'rgba(102, 126, 234, 0.2)', transform: 'translateY(-2px)', boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
-  },
-  buttonGlow: {
-    position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)', transition: 'left 0.5s ease'
-  },
-  buttonGlowHover: { left: '100%' },
   loadingContainer: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '24px', position: 'relative', zIndex: 1
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '20px'
   },
   loadingSpinner: {
-    width: '48px', height: '48px', border: '3px solid rgba(255, 255, 255, 0.1)',
-    borderTop: '3px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite'
+    width: '40px', height: '40px', border: '3px solid rgba(255, 255, 255, 0.1)',
+    borderTop: '3px solid #667eea', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
   },
-  loadingText: { fontSize: '1.1rem', color: '#a0a0a0', fontWeight: '500' },
   errorContainer: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    minHeight: '300px', padding: '40px', textAlign: 'center', background: 'rgba(25, 25, 25, 0.8)',
-    backdropFilter: 'blur(20px)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)', color: '#e0e0e0', position: 'relative', zIndex: 1
+    padding: '40px', textAlign: 'center', background: '#151515',
+    borderRadius: '16px', border: '1px solid #333',
+    color: '#e0e0e0'
   },
-  errorIcon: { marginBottom: '20px', color: '#ff6b6b' },
-  errorTitle: { fontSize: '1.5rem', fontWeight: '700', color: '#ffffff', margin: '0 0 12px 0' },
-  errorText: { fontSize: '1rem', color: '#a0a0a0', margin: '0 0 24px 0', lineHeight: '1.5' },
   retryButton: {
-    padding: '14px 28px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white', border: 'none', borderRadius: '12px', fontSize: '1rem', fontWeight: '600',
-    cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px',
-    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)', position: 'relative', overflow: 'hidden'
+    padding: '10px 24px', background: '#667eea',
+    color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600',
+    cursor: 'pointer', marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px'
   },
-  retryButtonHover: { transform: 'translateY(-2px)', boxShadow: '0 12px 30px rgba(102, 126, 234, 0.4)' },
-  pulseAnimation: { animation: 'pulse 2s infinite' },
-  floatingButtons: { position: 'fixed', right: '24px', bottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px', zIndex: 1000 },
-  floatingButton: {
-    width: '56px', height: '56px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)', border: 'none',
-    fontSize: '24px', color: 'white', position: 'relative', overflow: 'hidden'
-  },
-  scrollToTopButton: { opacity: 0, transform: 'translateY(20px)', transition: 'all 0.3s ease', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }, 
+  floatingButtons: { position: 'fixed', right: '20px', bottom: '20px', zIndex: 999 },
+  scrollToTopButton: { 
+    width: '45px', height: '45px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', border: 'none', fontSize: '20px', color: 'white', 
+    background: '#667eea', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    opacity: 0, transform: 'translateY(20px)', transition: 'all 0.3s ease'
+  }, 
   scrollToTopButtonVisible: { opacity: 1, transform: 'translateY(0)' },
-  buttonHover: { transform: 'translateY(-3px)', boxShadow: '0 12px 30px rgba(0, 0, 0, 0.4)' },
-  floatingButtonGlow: {
-    position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)', transition: 'left 0.5s ease'
-  },
-  floatingButtonGlowHover: { left: '100%' }
 };
 
 const HomePage = () => {
@@ -118,13 +78,13 @@ const HomePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hoverStates, setHoverStates] = useState({});
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 300) setShowScrollToTop(true);
-      else setShowScrollToTop(false);
+      requestAnimationFrame(() => {
+        setShowScrollToTop(window.scrollY > 400);
+      });
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -141,18 +101,14 @@ const HomePage = () => {
       setCategories(categoriesResponse.data);
       setProducts(productsResponse.data);
     } catch (err) {
-      setError('No se pudieron cargar los datos de la página. Por favor, intenta nuevamente.');
-      console.error('Error fetching home data:', err);
+      setError('Error al cargar contenido.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { fetchHomeData(); }, []);
-
-  const handleHover = (element, isHovering) => {
-    setHoverStates(prev => ({ ...prev, [element]: isHovering }));
-  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -161,12 +117,10 @@ const HomePage = () => {
   if (loading) {
     return (
       <div style={styles.container}>
-        <div style={styles.backgroundDecoration} />
         <div style={styles.content}>
           <div style={styles.loadingContainer}>
-            <div style={{ ...styles.loadingSpinner, ...styles.pulseAnimation }} />
-            <h3 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>Cargando contenido</h3>
-            <p style={styles.loadingText}>Preparando la mejor experiencia para ti...</p>
+            <div style={styles.loadingSpinner} />
+            <p style={{color: '#888'}}>Cargando...</p>
           </div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
@@ -177,20 +131,12 @@ const HomePage = () => {
   if (error) {
     return (
       <div style={styles.container}>
-        <div style={styles.backgroundDecoration} />
         <div style={styles.content}>
           <div style={styles.errorContainer}>
-            <div style={styles.errorIcon}><FiAlertTriangle size={48} /></div>
-            <h2 style={styles.errorTitle}>Error de conexión</h2>
-            <p style={styles.errorText}>{error}</p>
-            <button
-              style={{ ...styles.retryButton, ...(hoverStates.retryButton && styles.retryButtonHover) }}
-              onClick={fetchHomeData}
-              onMouseEnter={() => handleHover('retryButton', true)}
-              onMouseLeave={() => handleHover('retryButton', false)}
-            >
-              <div style={{ ...styles.buttonGlow, ...(hoverStates.retryButton && styles.buttonGlowHover) }} />
-              <FiRefreshCw size={18} /> Reintentar
+            <FiAlertTriangle size={40} color="#ff6b6b" />
+            <h3>Ocurrió un error</h3>
+            <button style={styles.retryButton} onClick={fetchHomeData}>
+              <FiRefreshCw /> Reintentar
             </button>
           </div>
         </div>
@@ -200,156 +146,127 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.backgroundDecoration} />
        
-      {/* --- SECCIÓN CARRUSEL --- */}
       <div style={styles.fullWidthSection}>
         <Carousel />
       </div>
        
-      {/* Botones Flotantes (Solo Scroll Top) */}
       <div style={styles.floatingButtons}>
         <button
-          style={{ ...styles.floatingButton, ...styles.scrollToTopButton, ...(showScrollToTop && styles.scrollToTopButtonVisible), ...(hoverStates.scrollToTopButton && styles.buttonHover) }}
+          style={{ ...styles.scrollToTopButton, ...(showScrollToTop ? styles.scrollToTopButtonVisible : {}) }}
           onClick={scrollToTop}
-          onMouseEnter={() => handleHover('scrollToTopButton', true)}
-          onMouseLeave={() => handleHover('scrollToTopButton', false)}
-          aria-label="Ir al inicio de la página"
+          aria-label="Subir"
         >
-          <div style={{ ...styles.floatingButtonGlow, ...(hoverStates.scrollToTopButton && styles.floatingButtonGlowHover) }} />
           <FiArrowUp />
         </button>
       </div>
        
-      {/* --- CONTENIDO --- */}
       <div style={styles.content}>
 
-        {/* Sección Categorías */}
+        {/* Categorías */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
-              <h2 style={styles.sectionTitle}><FiGrid size={32} /> Categorías</h2>
-              <p style={styles.sectionSubtitle}>Encuentra lo que necesitas</p>
+              <h2 style={styles.sectionTitle}><FiGrid size={24} color="#667eea"/> Categorías</h2>
+              <p style={styles.sectionSubtitle}>Explora nuestro catálogo</p>
             </div>
-            
           </div>
           
           <div className="custom-grid">
-            {categories.length > 0 ? (
-              categories.map(cat => <CategoryCard category={cat} key={cat.id} />)
-            ) : (
-              <div style={styles.errorContainer}>
-                <FiGrid size={48} color="#667eea" />
-                <h3 style={styles.errorTitle}>No hay categorías</h3>
-                <p style={styles.errorText}>Estamos trabajando para agregar nuevas categorías.</p>
-              </div>
-            )}
+            {categories.map(cat => <CategoryCard category={cat} key={cat.id} />)}
           </div>
         </section>
 
-        {/* Sección Productos Destacados */}
+        {/* Destacados */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
-              <h2 style={styles.sectionTitle}><FiStar size={32} /> Destacados</h2>
-              <p style={styles.sectionSubtitle}>Lo mejor valorado por nuestros clientes</p>
+              <h2 style={styles.sectionTitle}><FiStar size={24} color="#ffd700"/> Destacados</h2>
+              <p style={styles.sectionSubtitle}>Lo mejor valorado</p>
             </div>
-            
           </div>
           
           <div className="custom-grid">
-            {products.length > 0 ? (
-              products.map(prod => <ProductCard product={prod} key={prod.id} />)
-            ) : (
-              <div style={styles.errorContainer}>
-                <FiShoppingBag size={48} color="#667eea" />
-                <h3 style={styles.errorTitle}>No hay productos</h3>
-                <p style={styles.errorText}>Pronto tendremos nuevos productos.</p>
-              </div>
-            )}
+            {products.map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
 
-        {/* Sección Productos en Tendencia */}
+        {/* Tendencias */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
-              <h2 style={styles.sectionTitle}><FiTrendingUp size={32} /> Tendencias</h2>
-              <p style={styles.sectionSubtitle}>Lo más popular de la semana</p>
+              <h2 style={styles.sectionTitle}><FiTrendingUp size={24} color="#ff6b6b"/> Tendencias</h2>
             </div>
-            
           </div>
           
           <div className="custom-grid">
-            {products.length > 0 ? (
-              products.slice(0, 4).map(prod => <ProductCard product={prod} key={prod.id} />)
-            ) : (
-              <div style={styles.errorContainer}>
-                <FiTrendingUp size={48} color="#667eea" />
-                <h3 style={styles.errorTitle}>No hay tendencias</h3>
-                <p style={styles.errorText}>Vuelve pronto.</p>
-              </div>
-            )}
+            {products.slice(0, 6).map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
 
-        {/* Sección Medios de Pago */}
         <section style={styles.section}>
           <PaymentMethods />
         </section>
 
       </div>
        
-      {/* 💥 SOLUCIÓN FINAL CSS (1 Columna Centrada y con ancho limitado en móvil) 💥 */}
+      {/* --- ESTILOS CSS CRÍTICOS ---
+        Aquí está la lógica del responsive:
+        1. Móvil (Default): 1 columna (1fr).
+        2. Tablet: 3 columnas.
+        3. PC: 6 columnas.
+      */}
       <style>{`
-        /* Animaciones */
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
-        /* Asegurar que el BODY/HTML no tenga scroll horizontal */
         body, html {
             overflow-x: hidden !important;
             width: 100%;
+            background-color: #0c0c0c;
         }
 
-        /* GRID POR DEFECTO (Escritorio/Tablet GRANDE) */
+        /* --- MÓVIL (Por defecto) --- */
         .custom-grid {
           display: grid;
           gap: 20px;
-          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          /* AQUÍ ESTÁ EL CAMBIO: Forzar 1 sola columna en móvil */
+          grid-template-columns: 1fr;
+          justify-items: center; /* Centrar la tarjeta */
         }
         
-        /* MÓVIL (Pantallas hasta 768px): 1 COLUMNA COMPACTA */
-        @media (max-width: 768px) {
-          
-          /* 1. CONTENEDOR DE LA GRILLA: FORZAR 1 COLUMNA */
+        /* Aseguramos que la tarjeta no sea excesivamente ancha en móvil */
+        .custom-grid > div, .custom-grid > a {
+            width: 100%;
+            max-width: 400px; /* Limitar el ancho en móvil para que se vea elegante */
+        }
+
+        /* --- TABLET (min 600px) --- */
+        @media (min-width: 600px) {
           .custom-grid {
-            grid-template-columns: 1fr !important; 
-            gap: 20px !important; 
+            /* Pasamos a 3 columnas en Tablets */
+            grid-template-columns: repeat(3, 1fr); 
+            justify-items: stretch;
           }
-          
-          /* 2. HIJOS DE LA GRILLA (LAS TARJETAS): LIMITAR ANCHO Y CENTRAR */
-          .custom-grid > a, .custom-grid > div {
-              /* 💥 CAMBIO CLAVE: Limitar el ancho de la tarjeta para que no ocupe 100% */
-              max-width: 350px !important; 
-              width: 90% !important; /* Ocupa el 90% del espacio, permitiendo margen */
-              min-width: unset !important;
-              box-sizing: border-box !important;
-              margin: 0 auto 20px auto !important; /* Centrar la tarjeta y añadir margen inferior */
-              padding: 0 !important;
+           .custom-grid > div, .custom-grid > a {
+            max-width: unset; /* Quitar límite de ancho */
           }
-          
-          /* 3. AJUSTE PARA EL ENCABEZADO DE LA SECCIÓN (Mejora la visualización vertical) */
-          div[style*="sectionHeader"] {
-              flex-direction: column;
-              align-items: flex-start;
+        }
+
+        /* --- PC Mediana (min 1024px) --- */
+        @media (min-width: 1024px) {
+          .custom-grid {
+            grid-template-columns: repeat(4, 1fr);
           }
-          /* El botón "Ver todas" se pone debajo y ocupa todo el ancho */
-          .view-all-button { 
-              margin-top: 10px;
-              width: 100%;
-              justify-content: center;
+        }
+
+        /* --- PC GRANDE (min 1400px) --- */
+        @media (min-width: 1400px) {
+          .custom-grid {
+            /* Tu requisito de 6 por fila en pantalla grande */
+            grid-template-columns: repeat(6, 1fr);
           }
+        }
+
+        @media (max-width: 600px) {
+          div[style*="sectionTitle"] { font-size: 1.3rem !important; }
         }
       `}</style>
     </div>
