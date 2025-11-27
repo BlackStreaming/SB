@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '/src/services/apiClient.js';
 import { 
   FiBox, FiPlus, FiEdit2, FiTrash2, FiImage, FiDollarSign, 
-  FiTrendingUp, FiClock, FiFileText, FiCheckCircle, FiAlertCircle,
+  FiClock, FiFileText, FiCheckCircle, FiAlertCircle,
   FiLayers, FiGrid, FiList, FiTag, FiRefreshCw, FiEye, FiEyeOff,
-  FiTerminal, FiSave, FiX, FiTruck, FiShield, FiUploadCloud
+  FiTerminal, FiSave, FiX, FiTruck, FiShield, FiUploadCloud,
+  FiAlertTriangle, FiHelpCircle
 } from 'react-icons/fi';
 
 // Tasa de cambio
@@ -89,6 +90,7 @@ const styles = {
     marginTop: '12px', position: 'relative', overflow: 'hidden'
   },
   buttonSecondary: { background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ccc' },
+  buttonDanger: { background: 'rgba(220, 53, 69, 0.2)', border: '1px solid rgba(220, 53, 69, 0.4)', color: '#ff6b6b' },
   
   // Estilo del botón de subir imagen
   uploadBtn: {
@@ -108,9 +110,17 @@ const styles = {
   td: { padding: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e0e0e0', verticalAlign: 'middle' },
   statusBadge: { padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase' },
   
+  // Modal de Edición
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
   modalContent: { background: '#1a1a1a', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '700px', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' },
   
+  // Modal Feedback (Success/Error/Confirm)
+  feedbackOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
+  feedbackContent: { background: '#1f1f1f', borderRadius: '20px', padding: '40px 30px', width: '100%', maxWidth: '380px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
+  feedbackTitle: { fontSize: '1.4rem', fontWeight: '700', marginTop: '16px', marginBottom: '8px', color: '#fff' },
+  feedbackText: { fontSize: '0.95rem', color: '#aaa', marginBottom: '24px', lineHeight: '1.5' },
+  feedbackButton: { padding: '12px 30px', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', transition: '0.2s', width: '100%' },
+
   imagePreview: { width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginTop: '8px', border: '1px solid rgba(255,255,255,0.1)' },
   message: { padding: '12px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' },
   error: { background: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)' },
@@ -140,6 +150,12 @@ const ProductManagement = () => {
   const [uploadingImg, setUploadingImg] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Estado para el Modal de Feedback (Éxito/Error)
+  const [feedback, setFeedback] = useState({ show: false, type: 'success', message: '' });
+
+  // Nuevo Estado para el Modal de Confirmación de Borrado
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null, name: '' });
+
   useEffect(() => {
     setLoading(true);
     fetchProducts();
@@ -165,6 +181,10 @@ const ProductManagement = () => {
     finally { setLoading(false); }
   };
 
+  const handleCloseFeedback = () => {
+    setFeedback({ ...feedback, show: false });
+  };
+
   const handleNewProductChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewProductForm(prev => ({ 
@@ -183,23 +203,20 @@ const ProductManagement = () => {
 
     setUploadingImg(true);
     try {
-        // Endpoint en el backend que configuramos en el paso 1
         const res = await apiClient.post('/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
 
         const imageUrl = res.data.imageUrl;
 
-        // Si estamos editando, actualizamos el producto en edición
         if (isModalOpen && editingProduct) {
             setEditingProduct(prev => ({ ...prev, image_url: imageUrl }));
         } else {
-            // Si estamos creando, actualizamos el formulario nuevo
             setNewProductForm(prev => ({ ...prev, image_url: imageUrl }));
         }
     } catch (err) {
         console.error(err);
-        alert("Error al subir la imagen.");
+        setFeedback({ show: true, type: 'error', message: 'Error al subir la imagen. Inténtalo de nuevo.' });
     } finally {
         setUploadingImg(false);
     }
@@ -268,11 +285,16 @@ const ProductManagement = () => {
 
       setProducts([createdProduct, ...products]);
       setNewProductForm(initialFormState);
-      alert('¡Producto creado!');
+      
+      // REEMPLAZO DE ALERT
+      setFeedback({ show: true, type: 'success', message: '¡Producto creado exitosamente!' });
+
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Error al crear.';
       setError(msg);
       if (newProductId && !msg.includes('stock')) setError(`Creado (ID: ${newProductId}) pero falló stock.`);
+      // Opcional: Mostrar modal de error también aquí si lo prefieres sobre el mensaje inline
+      setFeedback({ show: true, type: 'error', message: msg });
     } finally { setSubmitLoading(false); }
   };
 
@@ -305,16 +327,42 @@ const ProductManagement = () => {
       const response = await apiClient.put(`/provider/products/${editingProduct.id}`, backendData);
       setProducts(products.map(p => p.id === editingProduct.id ? response.data : p));
       setIsModalOpen(false);
-      alert('¡Actualizado!');
-    } catch (err) { alert('Error al actualizar'); }
+      
+      // REEMPLAZO DE ALERT
+      setFeedback({ show: true, type: 'success', message: 'Producto actualizado correctamente.' });
+    } catch (err) { 
+        // REEMPLAZO DE ALERT
+        setFeedback({ show: true, type: 'error', message: 'Error al actualizar el producto.' });
+    }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Eliminar?')) {
-      try {
-        await apiClient.delete(`/provider/products/${id}`);
-        setProducts(products.filter(p => p.id !== id));
-      } catch (err) { alert('Error al eliminar. Puede tener pedidos asociados.'); }
+  // --- REEMPLAZO DE WINDOW.CONFIRM ---
+  
+  // 1. Abrir modal de confirmación
+  const handleDeleteClick = (product) => {
+      setDeleteConfirm({ show: true, id: product.id, name: product.name });
+  };
+
+  // 2. Cerrar modal de confirmación
+  const cancelDelete = () => {
+      setDeleteConfirm({ show: false, id: null, name: '' });
+  };
+
+  // 3. Ejecutar borrado real
+  const confirmDeleteAction = async () => {
+    if (!deleteConfirm.id) return;
+    
+    try {
+        await apiClient.delete(`/provider/products/${deleteConfirm.id}`);
+        setProducts(products.filter(p => p.id !== deleteConfirm.id));
+        setDeleteConfirm({ show: false, id: null, name: '' }); // Cierra el modal de confirmación
+        
+        // Muestra éxito
+        setFeedback({ show: true, type: 'success', message: 'Producto eliminado.' });
+    } catch (err) { 
+        setDeleteConfirm({ show: false, id: null, name: '' });
+        // Muestra error
+        setFeedback({ show: true, type: 'error', message: 'Error al eliminar. Puede tener pedidos asociados.' });
     }
   };
 
@@ -373,6 +421,20 @@ const ProductManagement = () => {
 
   return (
     <div style={styles.container}>
+      {/* Estilos para animaciones */}
+      <style>{`
+        @keyframes scaleUp {
+          0% { transform: scale(0); opacity: 0; }
+          60% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+          20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+      `}</style>
+
       <div style={styles.backgroundDecoration} />
       <div style={styles.headerSection}>
         <h1 style={styles.header}>Gestión de Productos</h1>
@@ -570,7 +632,7 @@ const ProductManagement = () => {
                       <td style={styles.td}>
                         <div style={{display:'flex', gap: 8}}>
                             <button onClick={() => openEditModal(p)} style={{...styles.actionBtn, ...styles.btnEdit}}><FiEdit2 size={14} /></button>
-                            <button onClick={() => handleDelete(p.id)} style={{...styles.actionBtn, ...styles.btnDelete}}><FiTrash2 size={14} /></button>
+                            <button onClick={() => handleDeleteClick(p)} style={{...styles.actionBtn, ...styles.btnDelete}}><FiTrash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -669,6 +731,92 @@ const ProductManagement = () => {
             </div>
         </div>
       )}
+
+      {/* Nuevo Modal de Feedback (Success/Error) */}
+      {feedback.show && (
+        <div style={styles.feedbackOverlay} onClick={handleCloseFeedback}>
+          <div style={styles.feedbackContent} onClick={e => e.stopPropagation()}>
+            {feedback.type === 'success' ? (
+              <FiCheckCircle 
+                size={64} 
+                color="#2ecc71" 
+                style={{ 
+                  marginBottom: 10,
+                  animation: 'scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' 
+                }} 
+              />
+            ) : (
+              <FiAlertTriangle 
+                size={64} 
+                color="#e74c3c" 
+                style={{ 
+                  marginBottom: 10,
+                  animation: 'shake 0.4s ease-in-out forwards'
+                }} 
+              />
+            )}
+            
+            <h3 style={styles.feedbackTitle}>
+              {feedback.type === 'success' ? '¡Éxito!' : 'Error'}
+            </h3>
+            
+            <p style={styles.feedbackText}>{feedback.message}</p>
+            
+            <button 
+              onClick={handleCloseFeedback}
+              style={{
+                ...styles.feedbackButton,
+                background: feedback.type === 'success' 
+                  ? 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)' 
+                  : 'rgba(255,255,255,0.1)',
+                color: feedback.type === 'success' ? '#fff' : '#e0e0e0',
+                border: feedback.type === 'success' ? 'none' : '1px solid #444'
+              }}
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN DE BORRADO */}
+      {deleteConfirm.show && (
+        <div style={styles.feedbackOverlay} onClick={cancelDelete}>
+            <div style={styles.feedbackContent} onClick={e => e.stopPropagation()}>
+                <FiHelpCircle 
+                    size={64} 
+                    color="#ffc107" 
+                    style={{ 
+                        marginBottom: 10,
+                        animation: 'scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' 
+                    }} 
+                />
+                
+                <h3 style={styles.feedbackTitle}>¿Estás seguro?</h3>
+                
+                <p style={styles.feedbackText}>
+                    Vas a eliminar el producto <strong>"{deleteConfirm.name}"</strong>. 
+                    Esta acción no se puede deshacer.
+                </p>
+                
+                <div style={{display: 'flex', gap: '10px'}}>
+                    <button 
+                        onClick={confirmDeleteAction}
+                        style={{...styles.feedbackButton, ...styles.buttonDanger, border: 'none', color: '#fff', background: '#dc3545'}}
+                    >
+                        Sí, Eliminar
+                    </button>
+                    <button 
+                        onClick={cancelDelete}
+                        style={{...styles.feedbackButton, background: 'rgba(255,255,255,0.1)', color: '#fff'}}
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
     </div>
   );
 };
