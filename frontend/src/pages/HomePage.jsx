@@ -20,12 +20,15 @@ const styles = {
     position: 'relative',
     overflowX: 'hidden'
   },
-  // VUELTA AL ORIGINAL: Sin restricciones de altura ni aspect-ratio
-  fullWidthSection: {
+  // SOLUCIÓN CLS (El error 0.51): 
+  // Definimos altura mínima para que el carrusel NO empuje a la sección de abajo cuando cargue.
+  carouselContainer: {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    display: 'flex',            
+    minHeight: '220px', // Altura reservada en móvil
   },
   content: {
     maxWidth: '1600px', 
@@ -34,10 +37,9 @@ const styles = {
     position: 'relative',
     zIndex: 1
   },
+  // ESTABILIDAD: Eliminé 'content-visibility' para evitar que la sección parpadee o cambie de tamaño
   section: { 
     marginBottom: '50px',
-    contentVisibility: 'auto', 
-    containIntrinsicSize: '300px' 
   },
   sectionHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -161,8 +163,11 @@ const HomePage = () => {
   return (
     <div style={styles.container}>
        
-      {/* Carrusel Original: Sin 'carousel-wrapper' que lo restrinja */}
-      <div style={styles.fullWidthSection}>
+      {/* CONTENEDOR CARRUSEL: 
+         Tiene la clase 'carousel-responsive-height' que le da altura mínima 
+         para que NO aplaste a las secciones de abajo.
+      */}
+      <div style={styles.carouselContainer} className="carousel-responsive-height">
         <Carousel />
       </div>
        
@@ -178,7 +183,7 @@ const HomePage = () => {
        
       <div style={styles.content}>
 
-        {/* Categorías */}
+        {/* Categorías - Esta es la sección que se movía */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -232,25 +237,28 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* -------------------------------------------
-           CATEGORÍAS (Responsive Corregido)
-        ------------------------------------------- */
+        /* --- FIX RESPONSIVE HEIGHT (CLS) --- */
+        /* Esto es lo que arregla el "Salto" de la sección. 
+           En PC le damos más altura mínima porque el carrusel es más grande. */
+        @media (min-width: 768px) {
+            .carousel-responsive-height {
+                min-height: 480px !important; /* Altura promedio de un carrusel en PC */
+            }
+        }
+        /* En móvil se usa el inline style de 220px */
+
+        /* --- CATEGORÍAS (Responsive) --- */
         .category-grid {
           display: grid;
           gap: 16px;
-          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
-          justify-items: center;      /* Centrado */
+          grid-template-columns: 1fr; 
+          justify-items: center;      
           width: 100%;
         }
-
-        /* Límite de tamaño en móvil para que no sea gigante */
-        .category-grid > div, 
-        .category-grid > a {
+        .category-grid > div, .category-grid > a {
             width: 100%;
             max-width: 280px; 
         }
-
-        /* Tablet (4 columnas) */
         @media (min-width: 600px) {
           .category-grid {
             grid-template-columns: repeat(4, 1fr); 
@@ -258,31 +266,23 @@ const HomePage = () => {
           }
           .category-grid > div, .category-grid > a { max-width: unset; }
         }
-
-        /* PC (8 columnas) */
         @media (min-width: 1200px) {
           .category-grid {
              grid-template-columns: repeat(8, 1fr);
           }
         }
 
-        /* -------------------------------------------
-           PRODUCTOS (Responsive Corregido)
-        ------------------------------------------- */
+        /* --- PRODUCTOS (Responsive) --- */
         .product-grid {
           display: grid;
           gap: 20px;
-          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
-          justify-items: center;      /* Centrado */
+          grid-template-columns: 1fr; 
+          justify-items: center;      
         }
-        
-        /* Límite de tamaño en móvil (anti-poster) */
-        .product-grid > div, 
-        .product-grid > a {
+        .product-grid > div, .product-grid > a {
             width: 100%;
             max-width: 320px; 
         }
-
         @media (min-width: 600px) {
           .product-grid {
             grid-template-columns: repeat(2, 1fr); 
@@ -300,9 +300,7 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* -------------------------------------------
-           OTROS
-        ------------------------------------------- */
+        /* --- EXTRAS --- */
         .force-no-border > * {
              border-color: rgba(255, 255, 255, 0.1) !important;
              transition: transform 0.3s ease !important;
@@ -316,7 +314,6 @@ const HomePage = () => {
             box-shadow: none !important;
             outline: none !important;
         }
-
         @media (max-width: 600px) {
           div[style*="sectionTitle"] { font-size: 1.3rem !important; }
         }
