@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom'; // Asegúrate de tener esto si usas Links
+import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
@@ -20,14 +20,12 @@ const styles = {
     position: 'relative',
     overflowX: 'hidden'
   },
-  // FIX CLS: Reservamos altura mínima y proporción para el carrusel
-  carouselSection: {
+  // VUELTA AL ORIGINAL: Sin restricciones de altura ni aspect-ratio
+  fullWidthSection: {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-    minHeight: '200px', 
-    aspectRatio: '16/9', 
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
   },
   content: {
     maxWidth: '1600px', 
@@ -38,7 +36,7 @@ const styles = {
   },
   section: { 
     marginBottom: '50px',
-    contentVisibility: 'auto', // Mejora el renderizado
+    contentVisibility: 'auto', 
     containIntrinsicSize: '300px' 
   },
   sectionHeader: {
@@ -87,7 +85,6 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Optimización: debounce para el evento scroll
   useEffect(() => {
     let timeoutId = null;
     const handleScroll = () => {
@@ -128,7 +125,6 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Optimización: Limitamos productos iniciales para mejorar LCP y evitar lag por GIFs
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]); 
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
@@ -165,7 +161,8 @@ const HomePage = () => {
   return (
     <div style={styles.container}>
        
-      <div style={styles.carouselSection} className="carousel-wrapper">
+      {/* Carrusel Original: Sin 'carousel-wrapper' que lo restrinja */}
+      <div style={styles.fullWidthSection}>
         <Carousel />
       </div>
        
@@ -235,61 +232,57 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* =========================================
-           1. RESPONSIVE DE CATEGORÍAS (FIXED)
-           ========================================= */
+        /* -------------------------------------------
+           CATEGORÍAS (Responsive Corregido)
+        ------------------------------------------- */
         .category-grid {
           display: grid;
           gap: 16px;
-          /* MÓVIL: 1 COLUMNA */
-          grid-template-columns: 1fr; 
-          justify-items: center; /* Centrado para evitar estiramiento */
+          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
+          justify-items: center;      /* Centrado */
           width: 100%;
         }
 
-        /* FIX TAMAÑO MÓVIL: Evita que la tarjeta sea gigante */
+        /* Límite de tamaño en móvil para que no sea gigante */
         .category-grid > div, 
         .category-grid > a {
             width: 100%;
-            max-width: 280px; /* Límite de ancho en móvil */
+            max-width: 280px; 
         }
-        
-        /* Tablet (más de 600px): 4 columnas */
+
+        /* Tablet (4 columnas) */
         @media (min-width: 600px) {
           .category-grid {
             grid-template-columns: repeat(4, 1fr); 
             justify-items: stretch;
           }
-          /* Quitamos el límite en pantallas grandes */
           .category-grid > div, .category-grid > a { max-width: unset; }
         }
 
-        /* PC (más de 1200px): 8 columnas */
+        /* PC (8 columnas) */
         @media (min-width: 1200px) {
           .category-grid {
              grid-template-columns: repeat(8, 1fr);
           }
         }
 
-        /* =========================================
-           2. RESPONSIVE DE PRODUCTOS (FIXED)
-           ========================================= */
+        /* -------------------------------------------
+           PRODUCTOS (Responsive Corregido)
+        ------------------------------------------- */
         .product-grid {
           display: grid;
           gap: 20px;
-          /* MÓVIL: 1 COLUMNA */
-          grid-template-columns: 1fr;
-          justify-items: center; 
+          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
+          justify-items: center;      /* Centrado */
         }
         
-        /* FIX TAMAÑO MÓVIL: Evita el efecto poster */
+        /* Límite de tamaño en móvil (anti-poster) */
         .product-grid > div, 
         .product-grid > a {
             width: 100%;
             max-width: 320px; 
         }
 
-        /* Tablet y superiores */
         @media (min-width: 600px) {
           .product-grid {
             grid-template-columns: repeat(2, 1fr); 
@@ -307,21 +300,9 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* =========================================
-           3. MEJORA VISUAL GENERAL
-           ========================================= */
-        /* Contenedor Carrusel estable */
-        .carousel-wrapper {
-            width: 100%;
-            aspect-ratio: 16/9;
-            min-height: 200px;
-            overflow: hidden; 
-        }
-        @media (min-width: 768px) {
-            .carousel-wrapper { min-height: 400px; }
-        }
-
-        /* Bordes de tarjetas (force-no-border) */
+        /* -------------------------------------------
+           OTROS
+        ------------------------------------------- */
         .force-no-border > * {
              border-color: rgba(255, 255, 255, 0.1) !important;
              transition: transform 0.3s ease !important;
@@ -336,7 +317,6 @@ const HomePage = () => {
             outline: none !important;
         }
 
-        /* Ajuste de títulos en móvil */
         @media (max-width: 600px) {
           div[style*="sectionTitle"] { font-size: 1.3rem !important; }
         }
