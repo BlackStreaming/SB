@@ -13,7 +13,6 @@ const styles = {
     height: '100%',
   },
   card: {
-    // El contenedor principal sigue siendo oscuro, pero la parte de arriba cambiará
     background: 'rgba(30, 30, 30, 0.6)',
     backdropFilter: 'blur(20px)',
     borderRadius: '16px',
@@ -29,34 +28,31 @@ const styles = {
   },
   cardHover: {
     transform: 'translateY(-8px)',
-    // Borde brillante al hacer hover
     borderColor: 'rgba(255, 255, 255, 0.3)',
     boxShadow: '0 15px 30px rgba(0, 0, 0, 0.4)'
   },
   
   // --- SECCIÓN DE IMAGEN CON FONDO BLANCO ---
   imageContainer: {
-    height: '180px', // Un poco más bajo para dar espacio al contenido
+    height: '180px',
     overflow: 'hidden',
-    backgroundColor: '#ffffff', // Fondo blanco puro
+    backgroundColor: '#ffffff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    padding: '20px', // Espacio interno para que la imagen "respire"
+    padding: '20px',
   },
   image: {
     width: '100%',
     height: '100%',
-    // 'contain' asegura que se vea toda la imagen sin cortes
     objectFit: 'contain', 
     transition: 'transform 0.5s ease',
-    filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))', // Sombra suave a la imagen misma
+    filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
   },
   imageHover: {
-    transform: 'scale(1.08)', // Zoom sutil
+    transform: 'scale(1.08)',
   },
-  // Se eliminó el overlay oscuro para que el blanco brille
 
   // --- CONTENIDO (Parte inferior oscura) ---
   content: {
@@ -66,13 +62,12 @@ const styles = {
     gap: '12px',
     flex: 1,
     justifyContent: 'space-between',
-    borderTop: '1px solid rgba(255,255,255,0.05)' // Separador sutil
+    borderTop: '1px solid rgba(255,255,255,0.05)'
   },
   
   header: { display: 'flex', alignItems: 'center', gap: '12px' },
   iconWrapper: {
     width: '36px', height: '36px', borderRadius: '10px',
-    // Degradado vibrante para el icono
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
@@ -87,15 +82,14 @@ const styles = {
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
   },
 
-  // Botón de acción (Simple y limpio)
   actionText: {
     fontSize: '0.9rem', fontWeight: '600', color: '#667eea',
     display: 'flex', alignItems: 'center', gap: '8px',
     marginTop: 'auto', transition: 'all 0.3s ease'
   },
   actionTextHover: {
-    color: '#a78bfa', // Color más claro al hacer hover
-    gap: '12px' // La flecha se mueve un poco
+    color: '#a78bfa',
+    gap: '12px'
   },
 };
 
@@ -119,9 +113,11 @@ const CategoryCard = ({ category }) => {
             src={category.image_url || 'https://placehold.co/600x400/ffffff/667eea?text=Categoria'}
             alt={category.name}
             style={{ ...styles.image, ...(isHovered && styles.imageHover) }}
+            loading="lazy"           // <- LAZY LOADING
+            decoding="async"         // <- sugerencia extra
+            referrerPolicy="no-referrer"
             onError={(e) => {
               e.target.onerror = null;
-              // Placeholder con fondo blanco también
               e.target.src = 'https://placehold.co/600x400/ffffff/667eea?text=Categoria';
             }}
           />
@@ -140,7 +136,6 @@ const CategoryCard = ({ category }) => {
             )}
           </div>
 
-          {/* Botón de texto simple */}
           <div style={{ ...styles.actionText, ...(isHovered && styles.actionTextHover) }}>
             Explorar <FiArrowRight />
           </div>
