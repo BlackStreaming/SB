@@ -24,7 +24,9 @@ const RatingStars = ({ rating }) => {
       {[...Array(fullStars)].map((_, i) => <FiStar key={`f-${i}`} size={12} fill="#FFD700" color="#FFD700" />)}
       {hasHalf && <FiStar size={12} style={{ clipPath: 'inset(0 50% 0 0)' }} fill="#FFD700" color="#FFD700" />}
       {[...Array(empty)].map((_, i) => <FiStar key={`e-${i}`} size={12} fill="none" color="#444" />)}
-      <span style={{ fontSize: '0.7rem', color: '#777', marginLeft: '4px', fontWeight: '500' }}>{parseFloat(rating).toFixed(1)}</span>
+      <span style={{ fontSize: '0.7rem', color: '#777', marginLeft: '4px', fontWeight: '500' }}>
+        {parseFloat(rating).toFixed(1)}
+      </span>
     </div>
   );
 };
@@ -165,7 +167,7 @@ const styles = {
   },
   btnDisabled: {
     width: '100%', padding: '12px 0', borderRadius: '50px',
-    background: 'rgba(50, 50, 50, 0.5)', color: '#888', // Fondo gris oscuro, texto gris
+    background: 'rgba(50, 50, 50, 0.5)', color: '#888',
     border: '1px solid #444',
     cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '700',
     textTransform: 'uppercase'
@@ -192,14 +194,11 @@ const ProductCard = ({ product }) => {
 
   if (!product) return null;
 
-  // --- LÓGICA DE STOCK (CORREGIDA) ---
-  const stock = parseInt(product.stock_quantity || 0); // Asegurar que sea número
-  
-  // REGLA DE ORO: Si stock <= 0, es AGOTADO. No importa el status.
+  // --- LÓGICA DE STOCK ---
+  const stock = parseInt(product.stock_quantity || 0);
   const isTrulyOutOfStock = stock <= 0 || product.status === 'agotado';
 
   // --- LÓGICA DE CINTA (RIBBON) ---
-  // Prioridad: 1. Stock 0 (Agotado), 2. Status específico, 3. En Stock por defecto
   let ribbonConf = { text: 'EN STOCK', style: styles.ribbonGreen };
 
   if (isTrulyOutOfStock) {
@@ -220,11 +219,14 @@ const ProductCard = ({ product }) => {
   // --- TOOLTIP RENOVACIÓN ---
   const isRenewable = product.has_renewal;
   const tooltipText = isRenewable 
-      ? `Este pedido puede ser renovado por $${renewalPrice} para poder usar la misma cuenta comprada.`
-      : `Este pedido no tiene renovación, activo solo los dias que estan indicados (${product.duration_days || '?'}), luego tendra que volver a comprarlo.`;
+    ? `Este pedido puede ser renovado por $${renewalPrice} para poder usar la misma cuenta comprada.`
+    : `Este pedido no tiene renovación, activo solo los dias que estan indicados (${product.duration_days || '?'}), luego tendra que volver a comprarlo.`;
 
-  // Handlers
-  const handleAddToCart = (e) => { e.preventDefault(); setIsPurchaseModalOpen(true); };
+  const handleAddToCart = (e) => { 
+    e.preventDefault(); 
+    setIsPurchaseModalOpen(true); 
+  };
+
   const confirmAddToCart = (data) => {
     addToCart(data.product, { customerName: data.customerName, customerPhone: data.customerPhone });
     setIsPurchaseModalOpen(false);
@@ -250,20 +252,20 @@ const ProductCard = ({ product }) => {
           {/* SIDEBAR ICONOS */}
           <div style={styles.sidebar}>
             <button 
-                onClick={(e)=>{e.preventDefault(); setShowDetails(true)}} 
-                style={{...styles.sidebarBtn, ...(hoverSidebar === 'details' && styles.sidebarBtnHover)}} 
-                onMouseEnter={() => setHoverSidebar('details')}
-                onMouseLeave={() => setHoverSidebar(null)}
-                title="Ver Detalles"
+              onClick={(e)=>{e.preventDefault(); setShowDetails(true)}} 
+              style={{...styles.sidebarBtn, ...(hoverSidebar === 'details' && styles.sidebarBtnHover)}} 
+              onMouseEnter={() => setHoverSidebar('details')}
+              onMouseLeave={() => setHoverSidebar(null)}
+              title="Ver Detalles"
             >
               <FiInfo size={18}/>
             </button>
             <button 
-                onClick={(e)=>{e.preventDefault(); setShowTerms(true)}} 
-                style={{...styles.sidebarBtn, ...(hoverSidebar === 'terms' && styles.sidebarBtnHover)}} 
-                onMouseEnter={() => setHoverSidebar('terms')}
-                onMouseLeave={() => setHoverSidebar(null)}
-                title="Términos"
+              onClick={(e)=>{e.preventDefault(); setShowTerms(true)}} 
+              style={{...styles.sidebarBtn, ...(hoverSidebar === 'terms' && styles.sidebarBtnHover)}} 
+              onMouseEnter={() => setHoverSidebar('terms')}
+              onMouseLeave={() => setHoverSidebar(null)}
+              title="Términos"
             >
               <FiFileText size={18}/>
             </button>
@@ -275,21 +277,24 @@ const ProductCard = ({ product }) => {
               src={product.image_url || 'https://via.placeholder.com/300?text=Digital'} 
               alt={product.name} 
               style={{...styles.image, transform: hover ? 'scale(1.08)' : 'scale(1)'}}
+              loading="lazy"          // <- LAZY LOADING
+              decoding="async"        // <- sugerencia extra
+              referrerPolicy="no-referrer"
             />
             
             <div style={styles.badgeContainer}>
               {hasOffer ? (
-                  <div style={{...styles.badge, ...styles.pillOffer}}>
-                      <FiTag /> OFERTA
-                  </div>
+                <div style={{...styles.badge, ...styles.pillOffer}}>
+                  <FiTag /> OFERTA
+                </div>
               ) : (
-                  <div style={{...styles.badge, ...styles.pillNew}}>
-                      NUEVO
-                  </div>
+                <div style={{...styles.badge, ...styles.pillNew}}>
+                  NUEVO
+                </div>
               )}
               {discountPercent > 0 && (
                 <div style={{...styles.badge, ...styles.pillDiscount}}>
-                    -{discountPercent}%
+                  -{discountPercent}%
                 </div>
               )}
             </div>
@@ -302,47 +307,59 @@ const ProductCard = ({ product }) => {
             <RatingStars rating={product.provider_rating || 5} />
 
             <div style={styles.infoGrid}>
-              
               {/* IZQUIERDA: PRECIO Y STOCK */}
               <div style={styles.colLeft}>
                 <div style={styles.stockLabel}>
-                  {/* COLOR CONDICIONAL DEL STOCK */}
-                  Stock: <span style={{...styles.stockValue, ...(stock > 0 ? styles.stockGreen : styles.stockRed)}}>{stock} und.</span>
+                  Stock:{' '}
+                  <span style={{ 
+                    ...styles.stockValue, 
+                    ...(stock > 0 ? styles.stockGreen : styles.stockRed)
+                  }}>
+                    {stock} und.
+                  </span>
                 </div>
                 <div>
-                   <div style={styles.priceMain}>${finalPrice}</div>
-                   <div style={styles.priceSub}>S/ {(finalPrice * TIPO_DE_CAMBIO).toFixed(2)}</div>
+                  <div style={styles.priceMain}>${finalPrice}</div>
+                  <div style={styles.priceSub}>
+                    S/ {(finalPrice * TIPO_DE_CAMBIO).toFixed(2)}
+                  </div>
                 </div>
               </div>
 
               {/* DERECHA: PROVEEDOR Y RENOVACIÓN */}
               <div style={styles.colRight}>
-                <div style={styles.provider}><FiUser size={12}/> {product.provider_name || 'Oficial'}</div>
+                <div style={styles.provider}>
+                  <FiUser size={12}/> {product.provider_name || 'Oficial'}
+                </div>
                 
                 <div 
-                   style={styles.tooltipWrapper}
-                   onMouseEnter={() => setHoverTooltip(true)}
-                   onMouseLeave={() => setHoverTooltip(false)}
+                  style={styles.tooltipWrapper}
+                  onMouseEnter={() => setHoverTooltip(true)}
+                  onMouseLeave={() => setHoverTooltip(false)}
                 >
-                    {isRenewable ? (
-                        <div style={{...styles.statusBadge, ...styles.statusRenewable}}>
-                             <FiRefreshCw size={12}/> Renovable: ${renewalPrice}
-                        </div>
-                    ) : (
-                        <div style={{...styles.statusBadge, ...styles.statusNoRenewable}}>
-                             <FiAlertTriangle size={12}/> Sin Renovación
-                        </div>
-                    )}
+                  {isRenewable ? (
+                    <div style={{...styles.statusBadge, ...styles.statusRenewable}}>
+                      <FiRefreshCw size={12}/> Renovable: ${renewalPrice}
+                    </div>
+                  ) : (
+                    <div style={{...styles.statusBadge, ...styles.statusNoRenewable}}>
+                      <FiAlertTriangle size={12}/> Sin Renovación
+                    </div>
+                  )}
 
-                    {hoverTooltip && (
-                        <div style={styles.tooltipBox}>
-                            {tooltipText}
-                            <div style={styles.tooltipArrow}></div>
-                        </div>
-                    )}
+                  {hoverTooltip && (
+                    <div style={styles.tooltipBox}>
+                      {tooltipText}
+                      <div style={styles.tooltipArrow}></div>
+                    </div>
+                  )}
                 </div>
 
-                {oldPrice && <div style={styles.oldPrice}>Antes: ${oldPrice}</div>}
+                {oldPrice && (
+                  <div style={styles.oldPrice}>
+                    Antes: ${oldPrice}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -350,18 +367,18 @@ const ProductCard = ({ product }) => {
           {/* BOTÓN BLOQUEADO SI NO HAY STOCK */}
           <div style={styles.btnContainer}>
             {!isTrulyOutOfStock ? (
-                <button 
-                    onClick={handleAddToCart}
-                    style={{...styles.addToCartButton, ...(btnHover && styles.addToCartButtonHover)}}
-                    onMouseEnter={() => setBtnHover(true)}
-                    onMouseLeave={() => setBtnHover(false)}
-                >
-                    <FiShoppingCart size={18} /> AGREGAR AL CARRITO
-                </button>
+              <button 
+                onClick={handleAddToCart}
+                style={{...styles.addToCartButton, ...(btnHover && styles.addToCartButtonHover)}}
+                onMouseEnter={() => setBtnHover(true)}
+                onMouseLeave={() => setBtnHover(false)}
+              >
+                <FiShoppingCart size={18} /> AGREGAR AL CARRITO
+              </button>
             ) : (
-                <div style={styles.btnDisabled}>
-                    <FiX size={18} /> SIN STOCK
-                </div>
+              <div style={styles.btnDisabled}>
+                <FiX size={18} /> SIN STOCK
+              </div>
             )}
           </div>
 
@@ -372,24 +389,38 @@ const ProductCard = ({ product }) => {
       {showDetails && (
         <div style={styles.modalOverlay} onClick={(e) => {e.preventDefault(); setShowDetails(false)}}>
           <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <button style={styles.modalClose} onClick={() => setShowDetails(false)}><FiX/></button>
-            <h3 style={styles.modalTitle}><FiInfo color="#818cf8"/> Detalles</h3>
+            <button style={styles.modalClose} onClick={() => setShowDetails(false)}>
+              <FiX/>
+            </button>
+            <h3 style={styles.modalTitle}>
+              <FiInfo color="#818cf8"/> Detalles
+            </h3>
             <div style={styles.modalBody}>{product.description || "Sin descripción."}</div>
           </div>
         </div>
       )}
+
       {showTerms && (
         <div style={styles.modalOverlay} onClick={(e) => {e.preventDefault(); setShowTerms(false)}}>
           <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <button style={styles.modalClose} onClick={() => setShowTerms(false)}><FiX/></button>
-            <h3 style={styles.modalTitle}><FiFileText color="#10b981"/> Términos</h3>
+            <button style={styles.modalClose} onClick={() => setShowTerms(false)}>
+              <FiX/>
+            </button>
+            <h3 style={styles.modalTitle}>
+              <FiFileText color="#10b981"/> Términos
+            </h3>
             <div style={styles.modalBody}>{product.terms_conditions || "Garantía de funcionamiento."}</div>
           </div>
         </div>
       )}
+
       {isPurchaseModalOpen && (
         <div onClick={(e) => {e.preventDefault(); e.stopPropagation()}}>
-          <PurchaseModal product={product} onClose={() => setIsPurchaseModalOpen(false)} onAddToCart={confirmAddToCart} />
+          <PurchaseModal 
+            product={product} 
+            onClose={() => setIsPurchaseModalOpen(false)} 
+            onAddToCart={confirmAddToCart} 
+          />
         </div>
       )}
     </>
