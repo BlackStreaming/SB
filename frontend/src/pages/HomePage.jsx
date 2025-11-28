@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
@@ -20,13 +19,14 @@ const styles = {
     position: 'relative',
     overflowX: 'hidden'
   },
-  fullWidthSection: {
+  // FIX CLS: Reservamos altura mínima para el carrusel para que no empuje el contenido
+  carouselSection: {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-    // Optimización: reserva espacio para evitar saltos de layout
-    minHeight: '300px' 
+    minHeight: '200px', // Altura mínima móvil
+    aspectRatio: '16/9', // Mantiene la relación de aspecto reservada antes de cargar la imagen
   },
   content: {
     maxWidth: '1600px', 
@@ -37,9 +37,8 @@ const styles = {
   },
   section: { 
     marginBottom: '50px',
-    // Optimización: Ayuda al navegador a ignorar renderizado fuera de pantalla
-    contentVisibility: 'auto', 
-    containIntrinsicSize: '500px' 
+    contentVisibility: 'auto', // Mejora el renderizado
+    containIntrinsicSize: '300px' 
   },
   sectionHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -87,7 +86,6 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Optimización: debounce para el evento scroll
   useEffect(() => {
     let timeoutId = null;
     const handleScroll = () => {
@@ -95,7 +93,7 @@ const HomePage = () => {
       timeoutId = setTimeout(() => {
         setShowScrollToTop(window.scrollY > 400);
         timeoutId = null;
-      }, 100); // Chequear cada 100ms en lugar de cada frame
+      }, 100);
     };
     window.addEventListener('scroll', handleScroll);
     return () => {
@@ -128,9 +126,8 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Optimización: Memorizar listas recortadas para evitar cálculos en cada render
-  // Limitamos "Destacados" a 24 items para no explotar la memoria con GIFs
-  const featuredProducts = useMemo(() => products.slice(0, 24), [products]); 
+  // Limitamos productos iniciales para mejorar LCP
+  const featuredProducts = useMemo(() => products.slice(0, 12), [products]); 
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
   if (loading) {
@@ -166,7 +163,7 @@ const HomePage = () => {
   return (
     <div style={styles.container}>
        
-      <div style={styles.fullWidthSection}>
+      <div style={styles.carouselSection} className="carousel-wrapper">
         <Carousel />
       </div>
        
@@ -182,7 +179,7 @@ const HomePage = () => {
        
       <div style={styles.content}>
 
-        {/* Categorías (8 por fila en PC) */}
+        {/* Categorías */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -196,7 +193,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Destacados (Limitado a 24 items para performance) */}
+        {/* Destacados */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -236,80 +233,88 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* --- 1. CATEGORÍAS (Responsive: 8 por línea en PC) --- */
+        /* =========================================
+           1. RESPONSIVE DE CATEGORÍAS (FIXED)
+           ========================================= */
         .category-grid {
           display: grid;
           gap: 16px;
-          /* Mobile: 2 columnas */
-          grid-template-columns: repeat(2, 1fr); 
+          /* MÓVIL: 1 COLUMNA (Lo que pediste) */
+          grid-template-columns: 1fr; 
+          width: 100%;
         }
 
+        /* Tablet (más de 600px): 4 columnas */
         @media (min-width: 600px) {
           .category-grid {
-            grid-template-columns: repeat(4, 1fr); /* Tablet: 4 columnas */
+            grid-template-columns: repeat(4, 1fr); 
           }
         }
 
+        /* PC (más de 1200px): 8 columnas */
         @media (min-width: 1200px) {
           .category-grid {
-             grid-template-columns: repeat(8, 1fr); /* PC: 8 columnas exactas */
+             grid-template-columns: repeat(8, 1fr);
           }
         }
 
-        /* --- 2. PRODUCTOS --- */
+        /* =========================================
+           2. RESPONSIVE DE PRODUCTOS (FIXED)
+           ========================================= */
         .product-grid {
           display: grid;
           gap: 20px;
+          /* MÓVIL: 1 COLUMNA (Lo que pediste) */
           grid-template-columns: 1fr;
-          justify-items: center;
+          justify-items: stretch;
         }
         
+        /* Asegura que la tarjeta no se desborde */
         .product-grid > div, .product-grid > a {
             width: 100%;
-            max-width: 400px;
+            max-width: 100%; 
         }
 
+        /* Tablet y superiores */
         @media (min-width: 600px) {
           .product-grid {
             grid-template-columns: repeat(2, 1fr); 
-            justify-items: stretch;
           }
-           .product-grid > div, .product-grid > a { max-width: unset; }
         }
-
         @media (min-width: 900px) {
           .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
-
         @media (min-width: 1200px) {
           .product-grid { grid-template-columns: repeat(4, 1fr); }
         }
-
         @media (min-width: 1600px) {
-          .product-grid { 
-            grid-template-columns: repeat(6, 1fr); 
-          }
+          .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- 3. ESTILOS DE BORDE --- */
+        /* =========================================
+           3. MEJORA DE CLS (CUMULATIVE LAYOUT SHIFT)
+           ========================================= */
+        /* Esto evita que la página salte mientras carga el carrusel */
+        .carousel-wrapper {
+            aspect-ratio: 16/9; /* Espacio reservado responsive */
+            min-height: 200px;
+        }
+        @media (min-width: 768px) {
+            .carousel-wrapper {
+                min-height: 400px; /* Altura mayor en PC */
+            }
+        }
+
+        /* Estilos generales */
         .force-no-border > * {
              border-color: rgba(255, 255, 255, 0.1) !important;
              transition: transform 0.3s ease !important;
-             /* Mejora de performance para animaciones */
              will-change: transform; 
         }
-
-        .force-no-border > *:hover,
-        .force-no-border > a:hover,
-        .force-no-border > div:hover,
-        .force-no-border .card:hover {
+        .force-no-border > *:hover {
             border-color: rgba(255, 255, 255, 0.1) !important;
             box-shadow: none !important;
             outline: none !important;
-        }
-
-        .force-no-border > * > div:hover {
-            border-color: rgba(255, 255, 255, 0.1) !important;
         }
 
         @media (max-width: 600px) {
