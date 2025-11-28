@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom'; // Asegúrate de tener esto si usas Links
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
@@ -19,14 +20,14 @@ const styles = {
     position: 'relative',
     overflowX: 'hidden'
   },
-  // FIX CLS: Reservamos altura mínima para el carrusel para que no empuje el contenido
+  // FIX CLS: Reservamos altura mínima y proporción para el carrusel
   carouselSection: {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-    minHeight: '200px', // Altura mínima móvil
-    aspectRatio: '16/9', // Mantiene la relación de aspecto reservada antes de cargar la imagen
+    minHeight: '200px', 
+    aspectRatio: '16/9', 
   },
   content: {
     maxWidth: '1600px', 
@@ -86,6 +87,7 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // Optimización: debounce para el evento scroll
   useEffect(() => {
     let timeoutId = null;
     const handleScroll = () => {
@@ -126,7 +128,7 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Limitamos productos iniciales para mejorar LCP
+  // Optimización: Limitamos productos iniciales para mejorar LCP y evitar lag por GIFs
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]); 
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
@@ -239,16 +241,27 @@ const HomePage = () => {
         .category-grid {
           display: grid;
           gap: 16px;
-          /* MÓVIL: 1 COLUMNA (Lo que pediste) */
+          /* MÓVIL: 1 COLUMNA */
           grid-template-columns: 1fr; 
+          justify-items: center; /* Centrado para evitar estiramiento */
           width: 100%;
         }
 
+        /* FIX TAMAÑO MÓVIL: Evita que la tarjeta sea gigante */
+        .category-grid > div, 
+        .category-grid > a {
+            width: 100%;
+            max-width: 280px; /* Límite de ancho en móvil */
+        }
+        
         /* Tablet (más de 600px): 4 columnas */
         @media (min-width: 600px) {
           .category-grid {
             grid-template-columns: repeat(4, 1fr); 
+            justify-items: stretch;
           }
+          /* Quitamos el límite en pantallas grandes */
+          .category-grid > div, .category-grid > a { max-width: unset; }
         }
 
         /* PC (más de 1200px): 8 columnas */
@@ -264,22 +277,25 @@ const HomePage = () => {
         .product-grid {
           display: grid;
           gap: 20px;
-          /* MÓVIL: 1 COLUMNA (Lo que pediste) */
+          /* MÓVIL: 1 COLUMNA */
           grid-template-columns: 1fr;
-          justify-items: stretch;
+          justify-items: center; 
         }
         
-        /* Asegura que la tarjeta no se desborde */
-        .product-grid > div, .product-grid > a {
+        /* FIX TAMAÑO MÓVIL: Evita el efecto poster */
+        .product-grid > div, 
+        .product-grid > a {
             width: 100%;
-            max-width: 100%; 
+            max-width: 320px; 
         }
 
         /* Tablet y superiores */
         @media (min-width: 600px) {
           .product-grid {
             grid-template-columns: repeat(2, 1fr); 
+            justify-items: stretch;
           }
+           .product-grid > div, .product-grid > a { max-width: unset; }
         }
         @media (min-width: 900px) {
           .product-grid { grid-template-columns: repeat(3, 1fr); }
@@ -292,31 +308,35 @@ const HomePage = () => {
         }
 
         /* =========================================
-           3. MEJORA DE CLS (CUMULATIVE LAYOUT SHIFT)
+           3. MEJORA VISUAL GENERAL
            ========================================= */
-        /* Esto evita que la página salte mientras carga el carrusel */
+        /* Contenedor Carrusel estable */
         .carousel-wrapper {
-            aspect-ratio: 16/9; /* Espacio reservado responsive */
+            width: 100%;
+            aspect-ratio: 16/9;
             min-height: 200px;
+            overflow: hidden; 
         }
         @media (min-width: 768px) {
-            .carousel-wrapper {
-                min-height: 400px; /* Altura mayor en PC */
-            }
+            .carousel-wrapper { min-height: 400px; }
         }
 
-        /* Estilos generales */
+        /* Bordes de tarjetas (force-no-border) */
         .force-no-border > * {
              border-color: rgba(255, 255, 255, 0.1) !important;
              transition: transform 0.3s ease !important;
              will-change: transform; 
         }
-        .force-no-border > *:hover {
+        .force-no-border > *:hover,
+        .force-no-border > a:hover,
+        .force-no-border > div:hover,
+        .force-no-border .card:hover {
             border-color: rgba(255, 255, 255, 0.1) !important;
             box-shadow: none !important;
             outline: none !important;
         }
 
+        /* Ajuste de títulos en móvil */
         @media (max-width: 600px) {
           div[style*="sectionTitle"] { font-size: 1.3rem !important; }
         }
