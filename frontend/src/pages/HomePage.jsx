@@ -20,15 +20,13 @@ const styles = {
     position: 'relative',
     overflowX: 'hidden'
   },
-  // SOLUCIÓN CLS (El error 0.51): 
-  // Definimos altura mínima para que el carrusel NO empuje a la sección de abajo cuando cargue.
   carouselContainer: {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
     display: 'flex',            
-    minHeight: '220px', // Altura reservada en móvil
+    minHeight: '220px',
   },
   content: {
     maxWidth: '1600px', 
@@ -37,7 +35,6 @@ const styles = {
     position: 'relative',
     zIndex: 1
   },
-  // ESTABILIDAD: Eliminé 'content-visibility' para evitar que la sección parpadee o cambie de tamaño
   section: { 
     marginBottom: '50px',
   },
@@ -55,9 +52,11 @@ const styles = {
   loadingContainer: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '20px'
   },
+  // OPTIMIZACIÓN: Eliminada la animación 'spin' para reducir uso de CPU
   loadingSpinner: {
     width: '40px', height: '40px', border: '3px solid rgba(255, 255, 255, 0.1)',
-    borderTop: '3px solid #667eea', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+    borderTop: '3px solid #667eea', borderRadius: '50%', 
+    // animation: 'spin 0.8s linear infinite' // ELIMINADO
   },
   errorContainer: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -71,13 +70,15 @@ const styles = {
     cursor: 'pointer', marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px'
   },
   floatingButtons: { position: 'fixed', right: '20px', bottom: '20px', zIndex: 999 },
+  
+  // OPTIMIZACIÓN: Eliminada transition y transform. Ahora aparece/desaparece instantáneamente.
   scrollToTopButton: { 
-    width: '45px', height: '45px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '45px', height: '45px', borderRadius: '50%', display: 'none', // Por defecto oculto
+    alignItems: 'center', justifyContent: 'center',
     cursor: 'pointer', border: 'none', fontSize: '20px', color: 'white', 
     background: '#667eea', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-    opacity: 0, transform: 'translateY(20px)', transition: 'all 0.3s ease'
   }, 
-  scrollToTopButtonVisible: { opacity: 1, transform: 'translateY(0)' },
+  scrollToTopButtonVisible: { display: 'flex' }, // Simple display switch
 };
 
 const HomePage = () => {
@@ -88,13 +89,15 @@ const HomePage = () => {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   useEffect(() => {
+    // OPTIMIZACIÓN: Throttle del evento scroll para que no sature el hilo principal
     let timeoutId = null;
     const handleScroll = () => {
       if (timeoutId) return;
       timeoutId = setTimeout(() => {
+        // Simple verificación booleana
         setShowScrollToTop(window.scrollY > 400);
         timeoutId = null;
-      }, 100);
+      }, 150); // Aumentado a 150ms para menos chequeos
     };
     window.addEventListener('scroll', handleScroll);
     return () => {
@@ -124,7 +127,8 @@ const HomePage = () => {
   useEffect(() => { fetchHomeData(); }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Comportamiento 'auto' es instantáneo, 'smooth' consume recursos. Cambiado a 'auto'.
+    window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]); 
@@ -138,7 +142,7 @@ const HomePage = () => {
             <div style={styles.loadingSpinner} />
             <p style={{color: '#888'}}>Cargando...</p>
           </div>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+          {/* Keyframes eliminados para rendimiento */}
         </div>
       </div>
     );
@@ -162,11 +166,7 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
-       
-      {/* CONTENEDOR CARRUSEL: 
-         Tiene la clase 'carousel-responsive-height' que le da altura mínima 
-         para que NO aplaste a las secciones de abajo.
-      */}
+      
       <div style={styles.carouselContainer} className="carousel-responsive-height">
         <Carousel />
       </div>
@@ -183,7 +183,7 @@ const HomePage = () => {
        
       <div style={styles.content}>
 
-        {/* Categorías - Esta es la sección que se movía */}
+        {/* Categorías */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -237,15 +237,11 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* --- FIX RESPONSIVE HEIGHT (CLS) --- */
-        /* Esto es lo que arregla el "Salto" de la sección. 
-           En PC le damos más altura mínima porque el carrusel es más grande. */
         @media (min-width: 768px) {
             .carousel-responsive-height {
-                min-height: 480px !important; /* Altura promedio de un carrusel en PC */
+                min-height: 480px !important;
             }
         }
-        /* En móvil se usa el inline style de 220px */
 
         /* --- CATEGORÍAS (Responsive) --- */
         .category-grid {
@@ -300,11 +296,11 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- EXTRAS --- */
+        /* --- OPTIMIZACIÓN EXTREMA: Eliminadas todas las transiciones y transformaciones --- */
         .force-no-border > * {
              border-color: rgba(255, 255, 255, 0.1) !important;
-             transition: transform 0.3s ease !important;
-             will-change: transform; 
+             /* transition eliminada */
+             /* will-change eliminada para ahorrar RAM */
         }
         .force-no-border > *:hover,
         .force-no-border > a:hover,
