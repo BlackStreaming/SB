@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
@@ -25,60 +25,149 @@ const styles = {
     position: 'relative',
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-    display: 'flex',            
-    minHeight: '220px',
+    display: 'flex',
+    minHeight: '220px', // Altura reservada en móvil
   },
   content: {
-    maxWidth: '1600px', 
+    maxWidth: '1600px',
     margin: '0 auto',
-    padding: '0 20px 60px 20px', 
+    padding: '0 20px 60px 20px',
     position: 'relative',
     zIndex: 1
   },
-  section: { 
+  section: {
     marginBottom: '50px',
   },
   sectionHeader: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '20px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
   },
   sectionTitle: {
-    fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: 0, 
-    display: 'flex', alignItems: 'center', gap: '10px',
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
   },
   sectionSubtitle: {
-    fontSize: '0.95rem', color: '#888', margin: '4px 0 0 0', fontWeight: '400'
+    fontSize: '0.95rem',
+    color: '#888',
+    margin: '4px 0 0 0',
+    fontWeight: '400'
   },
   loadingContainer: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '20px'
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '400px',
+    gap: '20px'
   },
-  // OPTIMIZACIÓN: Eliminada la animación 'spin' para reducir uso de CPU
   loadingSpinner: {
-    width: '40px', height: '40px', border: '3px solid rgba(255, 255, 255, 0.1)',
-    borderTop: '3px solid #667eea', borderRadius: '50%', 
-    // animation: 'spin 0.8s linear infinite' // ELIMINADO
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(255, 255, 255, 0.1)',
+    borderTop: '3px solid #667eea',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite'
   },
   errorContainer: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    padding: '40px', textAlign: 'center', background: '#151515',
-    borderRadius: '16px', border: '1px solid #333',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px',
+    textAlign: 'center',
+    background: '#151515',
+    borderRadius: '16px',
+    border: '1px solid #333',
     color: '#e0e0e0'
   },
   retryButton: {
-    padding: '10px 24px', background: '#667eea',
-    color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '600',
-    cursor: 'pointer', marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px'
+    padding: '10px 24px',
+    background: '#667eea',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    marginTop: '15px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
   },
-  floatingButtons: { position: 'fixed', right: '20px', bottom: '20px', zIndex: 999 },
-  
-  // OPTIMIZACIÓN: Eliminada transition y transform. Ahora aparece/desaparece instantáneamente.
-  scrollToTopButton: { 
-    width: '45px', height: '45px', borderRadius: '50%', display: 'none', // Por defecto oculto
-    alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', border: 'none', fontSize: '20px', color: 'white', 
-    background: '#667eea', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-  }, 
-  scrollToTopButtonVisible: { display: 'flex' }, // Simple display switch
+  floatingButtons: {
+    position: 'fixed',
+    right: '20px',
+    bottom: '20px',
+    zIndex: 999
+  },
+  scrollToTopButton: {
+    width: '45px',
+    height: '45px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    border: 'none',
+    fontSize: '20px',
+    color: 'white',
+    background: '#667eea',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    opacity: 0,
+    transform: 'translateY(20px)',
+    transition: 'all 0.3s ease'
+  },
+  scrollToTopButtonVisible: {
+    opacity: 1,
+    transform: 'translateY(0)'
+  },
+};
+
+/**
+ * Sección perezosa: solo monta el contenido cuando entra al viewport.
+ * Evita que todas las imágenes/gifs se carguen al inicio.
+ */
+const LazySection = ({ children, rootMargin = '200px 0px' }) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Fallback: si no hay IntersectionObserver, mostramos todo
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { root: null, rootMargin, threshold: 0.1 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [rootMargin]);
+
+  return (
+    <div ref={ref}>
+      {isVisible ? children : null}
+    </div>
+  );
 };
 
 const HomePage = () => {
@@ -88,21 +177,24 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // Scroll más suave usando requestAnimationFrame
   useEffect(() => {
-    // OPTIMIZACIÓN: Throttle del evento scroll para que no sature el hilo principal
-    let timeoutId = null;
+    let ticking = false;
+
     const handleScroll = () => {
-      if (timeoutId) return;
-      timeoutId = setTimeout(() => {
-        // Simple verificación booleana
-        setShowScrollToTop(window.scrollY > 400);
-        timeoutId = null;
-      }, 150); // Aumentado a 150ms para menos chequeos
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowScrollToTop(window.scrollY > 400);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 
@@ -124,14 +216,16 @@ const HomePage = () => {
     }
   };
 
-  useEffect(() => { fetchHomeData(); }, []);
+  useEffect(() => {
+    fetchHomeData();
+  }, []);
 
   const scrollToTop = () => {
-    // Comportamiento 'auto' es instantáneo, 'smooth' consume recursos. Cambiado a 'auto'.
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const featuredProducts = useMemo(() => products.slice(0, 12), [products]); 
+  // Si tienes muchos productos, limita lo que se muestra inicialmente
+  const featuredProducts = useMemo(() => products.slice(0, 12), [products]);
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
   if (loading) {
@@ -140,9 +234,14 @@ const HomePage = () => {
         <div style={styles.content}>
           <div style={styles.loadingContainer}>
             <div style={styles.loadingSpinner} />
-            <p style={{color: '#888'}}>Cargando...</p>
+            <p style={{ color: '#888' }}>Cargando...</p>
           </div>
-          {/* Keyframes eliminados para rendimiento */}
+          <style>{`
+            @keyframes spin { 
+              0% { transform: rotate(0deg); } 
+              100% { transform: rotate(360deg); } 
+            }
+          `}</style>
         </div>
       </div>
     );
@@ -166,105 +265,129 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
-      
+      {/* Carrusel (parte de arriba) */}
       <div style={styles.carouselContainer} className="carousel-responsive-height">
         <Carousel />
       </div>
-       
+
+      {/* Botón flotante subir */}
       <div style={styles.floatingButtons}>
         <button
-          style={{ ...styles.scrollToTopButton, ...(showScrollToTop ? styles.scrollToTopButtonVisible : {}) }}
+          style={{
+            ...styles.scrollToTopButton,
+            ...(showScrollToTop ? styles.scrollToTopButtonVisible : {})
+          }}
           onClick={scrollToTop}
           aria-label="Subir"
         >
           <FiArrowUp />
         </button>
       </div>
-       
+
       <div style={styles.content}>
-
-        {/* Categorías */}
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}><FiGrid size={24} color="#667eea"/> Categorías</h2>
-              <p style={styles.sectionSubtitle}>Explora nuestro catálogo</p>
+        {/* CATEGORÍAS (Lazy) */}
+        <LazySection>
+          <section style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>
+                  <FiGrid size={24} color="#667eea" /> Categorías
+                </h2>
+                <p style={styles.sectionSubtitle}>Explora nuestro catálogo</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="category-grid">
-            {categories.map(cat => <CategoryCard category={cat} key={cat.id} />)}
-          </div>
-        </section>
 
-        {/* Destacados */}
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}><FiStar size={24} color="#ffd700"/> Destacados</h2>
-              <p style={styles.sectionSubtitle}>Lo mejor valorado</p>
+            <div className="category-grid">
+              {categories.map(cat => (
+                <CategoryCard category={cat} key={cat.id} />
+              ))}
             </div>
-          </div>
-          
-          <div className="product-grid force-no-border">
-            {featuredProducts.map(prod => <ProductCard product={prod} key={prod.id} />)}
-          </div>
-        </section>
+          </section>
+        </LazySection>
 
-        {/* Tendencias */}
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}><FiTrendingUp size={24} color="#ff6b6b"/> Tendencias</h2>
+        {/* DESTACADOS (Lazy) */}
+        <LazySection>
+          <section style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>
+                  <FiStar size={24} color="#ffd700" /> Destacados
+                </h2>
+                <p style={styles.sectionSubtitle}>Lo mejor valorado</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="product-grid force-no-border">
-            {trendingProducts.map(prod => <ProductCard product={prod} key={prod.id} />)}
-          </div>
-        </section>
 
-        <section style={styles.section}>
-          <PaymentMethods />
-        </section>
+            <div className="product-grid force-no-border">
+              {featuredProducts.map(prod => (
+                <ProductCard product={prod} key={prod.id} />
+              ))}
+            </div>
+          </section>
+        </LazySection>
 
+        {/* TENDENCIAS (Lazy) */}
+        <LazySection>
+          <section style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <div>
+                <h2 style={styles.sectionTitle}>
+                  <FiTrendingUp size={24} color="#ff6b6b" /> Tendencias
+                </h2>
+              </div>
+            </div>
+
+            <div className="product-grid force-no-border">
+              {trendingProducts.map(prod => (
+                <ProductCard product={prod} key={prod.id} />
+              ))}
+            </div>
+          </section>
+        </LazySection>
+
+        {/* MÉTODOS DE PAGO (Lazy) */}
+        <LazySection rootMargin="0px 0px 200px 0px">
+          <section style={styles.section}>
+            <PaymentMethods />
+          </section>
+        </LazySection>
       </div>
-       
+
       <style>{`
         body, html {
-            overflow-x: hidden !important;
-            width: 100%;
-            background-color: #0c0c0c;
+          overflow-x: hidden !important;
+          width: 100%;
+          background-color: #0c0c0c;
         }
 
+        /* --- FIX RESPONSIVE HEIGHT (CLS) --- */
         @media (min-width: 768px) {
-            .carousel-responsive-height {
-                min-height: 480px !important;
-            }
+          .carousel-responsive-height {
+            min-height: 480px !important;
+          }
         }
 
         /* --- CATEGORÍAS (Responsive) --- */
         .category-grid {
           display: grid;
           gap: 16px;
-          grid-template-columns: 1fr; 
-          justify-items: center;      
+          grid-template-columns: 1fr;
+          justify-items: center;
           width: 100%;
         }
         .category-grid > div, .category-grid > a {
-            width: 100%;
-            max-width: 280px; 
+          width: 100%;
+          max-width: 280px;
         }
         @media (min-width: 600px) {
           .category-grid {
-            grid-template-columns: repeat(4, 1fr); 
+            grid-template-columns: repeat(4, 1fr);
             justify-items: stretch;
           }
           .category-grid > div, .category-grid > a { max-width: unset; }
         }
         @media (min-width: 1200px) {
           .category-grid {
-             grid-template-columns: repeat(8, 1fr);
+            grid-template-columns: repeat(8, 1fr);
           }
         }
 
@@ -272,19 +395,19 @@ const HomePage = () => {
         .product-grid {
           display: grid;
           gap: 20px;
-          grid-template-columns: 1fr; 
-          justify-items: center;      
+          grid-template-columns: 1fr;
+          justify-items: center;
         }
         .product-grid > div, .product-grid > a {
-            width: 100%;
-            max-width: 320px; 
+          width: 100%;
+          max-width: 320px;
         }
         @media (min-width: 600px) {
           .product-grid {
-            grid-template-columns: repeat(2, 1fr); 
+            grid-template-columns: repeat(2, 1fr);
             justify-items: stretch;
           }
-           .product-grid > div, .product-grid > a { max-width: unset; }
+          .product-grid > div, .product-grid > a { max-width: unset; }
         }
         @media (min-width: 900px) {
           .product-grid { grid-template-columns: repeat(3, 1fr); }
@@ -296,20 +419,21 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- OPTIMIZACIÓN EXTREMA: Eliminadas todas las transiciones y transformaciones --- */
+        /* --- EXTRAS --- */
         .force-no-border > * {
-             border-color: rgba(255, 255, 255, 0.1) !important;
-             /* transition eliminada */
-             /* will-change eliminada para ahorrar RAM */
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          transition: transform 0.3s ease !important;
         }
+
         .force-no-border > *:hover,
         .force-no-border > a:hover,
         .force-no-border > div:hover,
         .force-no-border .card:hover {
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            box-shadow: none !important;
-            outline: none !important;
+          border-color: rgba(255, 255, 255, 0.1) !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
+
         @media (max-width: 600px) {
           div[style*="sectionTitle"] { font-size: 1.3rem !important; }
         }
