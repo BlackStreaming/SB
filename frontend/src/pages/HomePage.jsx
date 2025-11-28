@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
@@ -24,7 +24,9 @@ const styles = {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    // Optimización: reserva espacio para evitar saltos de layout
+    minHeight: '300px' 
   },
   content: {
     maxWidth: '1600px', 
@@ -33,7 +35,12 @@ const styles = {
     position: 'relative',
     zIndex: 1
   },
-  section: { marginBottom: '50px' },
+  section: { 
+    marginBottom: '50px',
+    // Optimización: Ayuda al navegador a ignorar renderizado fuera de pantalla
+    contentVisibility: 'auto', 
+    containIntrinsicSize: '500px' 
+  },
   sectionHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
@@ -80,14 +87,21 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
+  // Optimización: debounce para el evento scroll
   useEffect(() => {
+    let timeoutId = null;
     const handleScroll = () => {
-      requestAnimationFrame(() => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
         setShowScrollToTop(window.scrollY > 400);
-      });
+        timeoutId = null;
+      }, 100); // Chequear cada 100ms en lugar de cada frame
     };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   const fetchHomeData = async () => {
@@ -113,6 +127,11 @@ const HomePage = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Optimización: Memorizar listas recortadas para evitar cálculos en cada render
+  // Limitamos "Destacados" a 24 items para no explotar la memoria con GIFs
+  const featuredProducts = useMemo(() => products.slice(0, 24), [products]); 
+  const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
   if (loading) {
     return (
@@ -163,7 +182,7 @@ const HomePage = () => {
        
       <div style={styles.content}>
 
-        {/* Categorías (Iconos pequeños) */}
+        {/* Categorías (8 por fila en PC) */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -177,7 +196,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Destacados (Sin bordes blancos al pasar mouse) */}
+        {/* Destacados (Limitado a 24 items para performance) */}
         <section style={styles.section}>
           <div style={styles.sectionHeader}>
             <div>
@@ -186,9 +205,8 @@ const HomePage = () => {
             </div>
           </div>
           
-          {/* Se añade la clase 'force-no-border' */}
           <div className="product-grid force-no-border">
-            {products.map(prod => <ProductCard product={prod} key={prod.id} />)}
+            {featuredProducts.map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
 
@@ -201,7 +219,7 @@ const HomePage = () => {
           </div>
           
           <div className="product-grid force-no-border">
-            {products.slice(0, 6).map(prod => <ProductCard product={prod} key={prod.id} />)}
+            {trendingProducts.map(prod => <ProductCard product={prod} key={prod.id} />)}
           </div>
         </section>
 
@@ -218,18 +236,31 @@ const HomePage = () => {
             background-color: #0c0c0c;
         }
 
-        /* --- 1. CATEGORÍAS (Pequeñas) --- */
+        /* --- 1. CATEGORÍAS (Responsive: 8 por línea en PC) --- */
         .category-grid {
           display: grid;
           gap: 16px;
-          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Iconos compactos */
+          /* Mobile: 2 columnas */
+          grid-template-columns: repeat(2, 1fr); 
         }
 
-        /* --- 2. PRODUCTOS (Responsive 1 -> 6 columnas) --- */
+        @media (min-width: 600px) {
+          .category-grid {
+            grid-template-columns: repeat(4, 1fr); /* Tablet: 4 columnas */
+          }
+        }
+
+        @media (min-width: 1200px) {
+          .category-grid {
+             grid-template-columns: repeat(8, 1fr); /* PC: 8 columnas exactas */
+          }
+        }
+
+        /* --- 2. PRODUCTOS --- */
         .product-grid {
           display: grid;
           gap: 20px;
-          grid-template-columns: 1fr; /* Móvil: 1 sola columna */
+          grid-template-columns: 1fr;
           justify-items: center;
         }
         
@@ -240,41 +271,43 @@ const HomePage = () => {
 
         @media (min-width: 600px) {
           .product-grid {
-            grid-template-columns: repeat(3, 1fr); 
+            grid-template-columns: repeat(2, 1fr); 
             justify-items: stretch;
           }
            .product-grid > div, .product-grid > a { max-width: unset; }
         }
 
-        @media (min-width: 1024px) {
+        @media (min-width: 900px) {
+          .product-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (min-width: 1200px) {
           .product-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
-        @media (min-width: 1400px) {
+        @media (min-width: 1600px) {
           .product-grid { 
-            grid-template-columns: repeat(6, 1fr); /* 6 por fila en PC grande */
+            grid-template-columns: repeat(6, 1fr); 
           }
         }
 
-        /* --- 3. FUERZA BRUTA PARA QUITAR BORDES BLANCOS AL HOVER --- */
-        
-        /* Esto anula cualquier estilo dentro del ProductCard */
+        /* --- 3. ESTILOS DE BORDE --- */
         .force-no-border > * {
-             border-color: rgba(255, 255, 255, 0.1) !important; /* Mantiene el borde gris suave */
-             transition: transform 0.3s ease !important; /* Mantiene movimiento si quieres, quita si no */
+             border-color: rgba(255, 255, 255, 0.1) !important;
+             transition: transform 0.3s ease !important;
+             /* Mejora de performance para animaciones */
+             will-change: transform; 
         }
 
-        /* Al pasar el mouse, FORZAMOS que el borde siga gris y quitamos sombras */
         .force-no-border > *:hover,
         .force-no-border > a:hover,
         .force-no-border > div:hover,
         .force-no-border .card:hover {
-            border-color: rgba(255, 255, 255, 0.1) !important; /* IMPORTANTE: No cambia a blanco */
-            box-shadow: none !important; /* Quita el resplandor */
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none !important;
             outline: none !important;
         }
 
-        /* Selector profundo por si ProductCard tiene una estructura compleja */
         .force-no-border > * > div:hover {
             border-color: rgba(255, 255, 255, 0.1) !important;
         }
