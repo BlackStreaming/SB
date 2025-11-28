@@ -8,11 +8,11 @@ const CarouselStyles = () => (
   <style>{`
     .netflix-carousel-wrapper {
       width: 100%;
-      height: 75vh; /* Ocupa el 75% de la altura de la pantalla */
-      min-height: 550px; /* Altura mínima para laptops pequeñas */
+      height: 75vh;
+      min-height: 550px;
       position: relative;
       overflow: hidden;
-      border-radius: 0; /* Sin bordes redondeados para efecto inmersivo */
+      border-radius: 0;
       background-color: #0c0c0c;
       color: white;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -29,7 +29,7 @@ const CarouselStyles = () => (
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      padding-left: 8%; /* Espacio a la izquierda alineado visualmente */
+      padding-left: 8%;
       box-sizing: border-box;
       opacity: 0;
       transition: opacity 1s ease-in-out;
@@ -52,19 +52,25 @@ const CarouselStyles = () => (
       z-index: -2;
     }
 
-    /* --- IMAGEN CON MÁSCARA (FADE TO BLACK) --- */
+    /* --- CONTENEDOR DE IMAGEN CON MÁSCARA --- */
     .netflix-carousel-wrapper .slide-bg {
       position: absolute;
       top: 0;
-      right: 0; /* Alineada a la derecha */
-      width: 80%; /* La imagen ocupa el 80% derecho */
+      right: 0;
+      width: 80%;
       height: 100%;
-      background-size: cover;
-      background-position: center center;
+      overflow: hidden;
       z-index: -1;
-      /* Esta máscara hace que la imagen se desvanezca hacia la izquierda (negro) */
       mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,1) 100%);
       -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,1) 100%);
+    }
+
+    /* Imagen real dentro del contenedor (lazy) */
+    .netflix-carousel-wrapper .slide-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     /* --- TIPOGRAFÍA Y CONTENIDO --- */
@@ -83,13 +89,13 @@ const CarouselStyles = () => (
       letter-spacing: 4px;
       text-transform: uppercase;
       font-weight: 700;
-      color: #E50914; /* Un toque de color rojo en el subtítulo */
+      color: #E50914;
       margin: 0;
       display: block;
     }
 
     .netflix-carousel-wrapper .title {
-      font-size: 5rem; /* Título GIGANTE */
+      font-size: 5rem;
       font-weight: 900;
       margin: 0;
       line-height: 0.95;
@@ -115,7 +121,7 @@ const CarouselStyles = () => (
       background-color: #E50914;
       color: white;
       padding: 16px 40px;
-      border-radius: 8px; /* Botón semi-cuadrado moderno */
+      border-radius: 8px;
       text-decoration: none;
       font-weight: 700;
       font-size: 1.1rem;
@@ -165,7 +171,7 @@ const CarouselStyles = () => (
     .netflix-carousel-wrapper .dots-container {
       position: absolute;
       bottom: 40px;
-      left: 8%; /* Alineado con el texto */
+      left: 8%;
       display: flex;
       gap: 14px;
       z-index: 20;
@@ -192,11 +198,20 @@ const CarouselStyles = () => (
     @media (max-width: 768px) {
       .netflix-carousel-wrapper { height: 65vh; min-height: 500px; }
       .netflix-carousel-wrapper .title { font-size: 3rem; }
-      .netflix-carousel-wrapper .slide { padding-left: 24px; padding-right: 24px; align-items: flex-end; padding-bottom: 80px; }
-      .netflix-carousel-wrapper .slide-bg { width: 100%; mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, transparent 100%); -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, transparent 100%); }
+      .netflix-carousel-wrapper .slide {
+        padding-left: 24px;
+        padding-right: 24px;
+        align-items: flex-end;
+        padding-bottom: 80px;
+      }
+      .netflix-carousel-wrapper .slide-bg {
+        width: 100%;
+        mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, transparent 100%);
+      }
       .netflix-carousel-wrapper .text-content { max-width: 100%; }
       .netflix-carousel-wrapper .dots-container { left: 50%; transform: translateX(-50%); bottom: 20px; }
-      .netflix-carousel-wrapper .arrow-button { display: none; } /* Ocultar flechas en móvil */
+      .netflix-carousel-wrapper .arrow-button { display: none; }
     }
   `}</style>
 );
@@ -214,7 +229,7 @@ const Carousel = () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/carousel-slides');
-        setSlides(response.data);
+        setSlides(response.data || []);
       } catch (err) {
         setError('Error al cargar.');
         console.error(err);
@@ -228,50 +243,110 @@ const Carousel = () => {
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (slides.length === 0 || isPaused) return;
+
     timerRef.current = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % slides.length);
-    }, 6000); // 6 segundos por slide
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [slides.length, isPaused]); 
+    }, 6000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [slides.length, isPaused]);
 
   const handleMouseEnter = () => setIsPaused(true);
   const handleMouseLeave = () => setIsPaused(false);
-  const goToPrevious = () => { setIsPaused(true); setCurrentIndex(prev => (prev - 1 + slides.length) % slides.length); };
-  const goToNext = () => { setIsPaused(true); setCurrentIndex(prev => (prev + 1) % slides.length); };
+  const goToPrevious = () => {
+    setIsPaused(true);
+    setCurrentIndex(prev => (prev - 1 + slides.length) % slides.length);
+  };
+  const goToNext = () => {
+    setIsPaused(true);
+    setCurrentIndex(prev => (prev + 1) % slides.length);
+  };
 
-  if (loading) return <div className="netflix-carousel-wrapper"><CarouselStyles /><div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100%'}}>Cargando...</div></div>;
+  if (loading) {
+    return (
+      <div className="netflix-carousel-wrapper">
+        <CarouselStyles />
+        <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100%'}}>
+          Cargando...
+        </div>
+      </div>
+    );
+  }
+
   if (error || slides.length === 0) return null;
 
+  const total = slides.length;
+
   return (
-    <div className="netflix-carousel-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <div
+      className="netflix-carousel-wrapper"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <CarouselStyles />
       
-      {slides.map((slide, index) => (
-        <div key={slide.id || index} className={`slide ${index === currentIndex ? 'slide-active' : ''}`} aria-hidden={index !== currentIndex}>
-          <div className="slide-backdrop" />
-          {/* Imagen de fondo con máscara */}
-          <div className="slide-bg" style={{ backgroundImage: `url(${slide.image_url})` }} />
+      {slides.map((slide, index) => {
+        // Solo renderizamos el actual, el anterior y el siguiente
+        const isActive = index === currentIndex;
+        const isPrev = index === (currentIndex - 1 + total) % total;
+        const isNext = index === (currentIndex + 1) % total;
 
-          <div className="text-content">
-            <span className="subtitle">{slide.subtitle || 'DESTACADO'}</span>
-            <h2 className="title">{slide.title}</h2>
-            {slide.description && <p className="description">{slide.description}</p>}
-            
-            {slide.link_url && (
-              <Link to={slide.link_url} className="cta-button">
-                VER OFERTA <FiArrowRight />
-              </Link>
-            )}
+        if (!isActive && !isPrev && !isNext) return null;
+
+        return (
+          <div
+            key={slide.id || index}
+            className={`slide ${isActive ? 'slide-active' : ''}`}
+            aria-hidden={!isActive}
+          >
+            <div className="slide-backdrop" />
+
+            {/* Imagen de fondo usando <img> con lazy */}
+            <div className="slide-bg">
+              <img
+                src={slide.image_url}
+                alt={slide.title || 'Slide destacado'}
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://placehold.co/1600x900/000000/FFFFFF?text=Slide';
+                }}
+              />
+            </div>
+
+            <div className="text-content">
+              <span className="subtitle">{slide.subtitle || 'DESTACADO'}</span>
+              <h2 className="title">{slide.title}</h2>
+              {slide.description && <p className="description">{slide.description}</p>}
+
+              {slide.link_url && (
+                <Link to={slide.link_url} className="cta-button">
+                  VER OFERTA <FiArrowRight />
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
-      <button className="arrow-button" style={{left: '30px'}} onClick={goToPrevious}><FiChevronLeft size={28} /></button>
-      <button className="arrow-button" style={{right: '30px'}} onClick={goToNext}><FiChevronRight size={28} /></button>
+      <button className="arrow-button" style={{left: '30px'}} onClick={goToPrevious}>
+        <FiChevronLeft size={28} />
+      </button>
+      <button className="arrow-button" style={{right: '30px'}} onClick={goToNext}>
+        <FiChevronRight size={28} />
+      </button>
 
       <div className="dots-container">
         {slides.map((_, index) => (
-          <button key={index} className={`dot ${index === currentIndex ? 'dot-active' : ''}`} onClick={() => setCurrentIndex(index)} />
+          <button
+            key={index}
+            className={`dot ${index === currentIndex ? 'dot-active' : ''}`}
+            onClick={() => setCurrentIndex(index)}
+          />
         ))}
       </div>
     </div>
