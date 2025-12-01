@@ -5,6 +5,8 @@ import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
 import CategoryCard from '/src/components/ui/CategoryCard.jsx';
 import PaymentMethods from '/src/components/layout/PaymentMethods.jsx';
+// Asegúrate de haber creado el archivo ChatBot.jsx que te pasé antes
+import ChatBot from '/src/components/ui/ChatBot.jsx'; 
 import { 
   FiTrendingUp, FiStar, FiGrid, FiRefreshCw, FiAlertTriangle, 
   FiArrowUp
@@ -26,7 +28,7 @@ const styles = {
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
     display: 'flex',
-    minHeight: '220px', // Altura reservada en móvil
+    minHeight: '220px',
   },
   content: {
     maxWidth: '1600px',
@@ -103,11 +105,21 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   },
+  // --- ACTUALIZADO: Contenedor para botones flotantes ---
   floatingButtons: {
     position: 'fixed',
     right: '20px',
     bottom: '20px',
-    zIndex: 999
+    zIndex: 999,
+    display: 'flex',
+    flexDirection: 'column', // Apila los botones verticalmente
+    alignItems: 'flex-end',  // Alinea a la derecha
+    gap: '15px',             // Espacio entre el Chat y el botón de subir
+    pointerEvents: 'none'    // Permite hacer clic "a través" del área vacía
+  },
+  // Elementos individuales recuperan el puntero
+  pointerActive: {
+    pointerEvents: 'auto' 
   },
   scrollToTopButton: {
     width: '45px',
@@ -124,7 +136,8 @@ const styles = {
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
     opacity: 0,
     transform: 'translateY(20px)',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    pointerEvents: 'auto' 
   },
   scrollToTopButtonVisible: {
     opacity: 1,
@@ -134,14 +147,12 @@ const styles = {
 
 /**
  * Sección perezosa: solo monta el contenido cuando entra al viewport.
- * Evita que todas las imágenes/gifs se carguen al inicio.
  */
 const LazySection = ({ children, rootMargin = '200px 0px' }) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Fallback: si no hay IntersectionObserver, mostramos todo
     if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
       setIsVisible(true);
       return;
@@ -177,7 +188,6 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
 
-  // Scroll más suave usando requestAnimationFrame
   useEffect(() => {
     let ticking = false;
 
@@ -224,7 +234,6 @@ const HomePage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Si tienes muchos productos, limita lo que se muestra inicialmente
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]);
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
@@ -265,13 +274,20 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Carrusel (parte de arriba) */}
+      {/* Carrusel */}
       <div style={styles.carouselContainer} className="carousel-responsive-height">
         <Carousel />
       </div>
 
-      {/* Botón flotante subir */}
+      {/* --- BOTONES FLOTANTES (Chat + Subir) --- */}
       <div style={styles.floatingButtons}>
+        
+        {/* Componente ChatBot envuelto para reactivar eventos de puntero */}
+        <div style={styles.pointerActive}>
+          <ChatBot />
+        </div>
+
+        {/* Botón ScrollToTop */}
         <button
           style={{
             ...styles.scrollToTopButton,
@@ -285,7 +301,7 @@ const HomePage = () => {
       </div>
 
       <div style={styles.content}>
-        {/* CATEGORÍAS (Lazy) */}
+        {/* CATEGORÍAS */}
         <LazySection>
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
@@ -305,7 +321,7 @@ const HomePage = () => {
           </section>
         </LazySection>
 
-        {/* DESTACADOS (Lazy) */}
+        {/* DESTACADOS */}
         <LazySection>
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
@@ -325,7 +341,7 @@ const HomePage = () => {
           </section>
         </LazySection>
 
-        {/* TENDENCIAS (Lazy) */}
+        {/* TENDENCIAS */}
         <LazySection>
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
@@ -344,7 +360,7 @@ const HomePage = () => {
           </section>
         </LazySection>
 
-        {/* MÉTODOS DE PAGO (Lazy) */}
+        {/* MÉTODOS DE PAGO */}
         <LazySection rootMargin="0px 0px 200px 0px">
           <section style={styles.section}>
             <PaymentMethods />
@@ -352,6 +368,7 @@ const HomePage = () => {
         </LazySection>
       </div>
 
+      {/* ESTILOS GLOBALES Y RESPONSIVE OPTIMIZADOS */}
       <style>{`
         body, html {
           overflow-x: hidden !important;
@@ -366,72 +383,81 @@ const HomePage = () => {
           }
         }
 
-        /* --- CATEGORÍAS (Responsive) --- */
+        /* --- CATEGORÍAS --- */
         .category-grid {
           display: grid;
           gap: 16px;
-          grid-template-columns: 1fr;
-          justify-items: center;
           width: 100%;
-        }
-        .category-grid > div, .category-grid > a {
-          width: 100%;
-          max-width: 280px;
-        }
-        @media (min-width: 600px) {
-          .category-grid {
-            grid-template-columns: repeat(4, 1fr);
-            justify-items: stretch;
-          }
-          .category-grid > div, .category-grid > a { max-width: unset; }
-        }
-        @media (min-width: 1200px) {
-          .category-grid {
-            grid-template-columns: repeat(8, 1fr);
-          }
+          grid-template-columns: repeat(2, 1fr);
         }
 
-        /* --- PRODUCTOS (Responsive) --- */
+        .category-grid > div, 
+        .category-grid > a {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          aspect-ratio: 0.75; 
+          min-height: 0;
+        }
+
+        @media (min-width: 500px) {
+          .category-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 768px) {
+          .category-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (min-width: 1024px) {
+          .category-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+        @media (min-width: 1280px) {
+          .category-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        @media (min-width: 1500px) {
+          .category-grid { grid-template-columns: repeat(8, 1fr); }
+        }
+
+        /* --- PRODUCTOS --- */
         .product-grid {
           display: grid;
           gap: 20px;
-          grid-template-columns: 1fr;
-          justify-items: center;
+          grid-template-columns: repeat(1, 1fr);
+          justify-items: stretch;
         }
-        .product-grid > div, .product-grid > a {
+        
+        .product-grid > div, 
+        .product-grid > a {
           width: 100%;
-          max-width: 320px;
+          height: 100%;
         }
-        @media (min-width: 600px) {
-          .product-grid {
-            grid-template-columns: repeat(2, 1fr);
-            justify-items: stretch;
-          }
-          .product-grid > div, .product-grid > a { max-width: unset; }
+
+        @media (min-width: 480px) {
+          .product-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (min-width: 900px) {
+        @media (min-width: 768px) {
           .product-grid { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (min-width: 1200px) {
+        @media (min-width: 1024px) {
           .product-grid { grid-template-columns: repeat(4, 1fr); }
         }
-        @media (min-width: 1600px) {
+        @media (min-width: 1400px) {
+          .product-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+        @media (min-width: 1700px) {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- EXTRAS --- */
+        /* --- EXTRAS & HOVER EFFECTS --- */
         .force-no-border > * {
           border-color: rgba(255, 255, 255, 0.1) !important;
-          transition: transform 0.3s ease !important;
+          transition: transform 0.3s ease, border-color 0.3s ease !important;
         }
 
         .force-no-border > *:hover,
         .force-no-border > a:hover,
-        .force-no-border > div:hover,
-        .force-no-border .card:hover {
-          border-color: rgba(255, 255, 255, 0.1) !important;
-          box-shadow: none !important;
-          outline: none !important;
+        .force-no-border > div:hover {
+          border-color: rgba(255, 255, 255, 0.3) !important;
+          transform: translateY(-5px);
         }
 
         @media (max-width: 600px) {
