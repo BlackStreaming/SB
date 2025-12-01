@@ -1,7 +1,7 @@
 // src/features/dashboard/UserDashboard/RechargePage.jsx
 
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../../services/apiClient.js';
+import apiClient from '../../../services/apiClient.js'; // Ajusta la ruta si es necesario
 import { useAuth } from '../../../context/AuthContext'; 
 import { 
   FiDollarSign, FiCreditCard, FiFileText, FiSend, FiClock,
@@ -9,39 +9,14 @@ import {
   FiTrendingUp, FiCopy, FiInfo, FiMessageCircle
 } from 'react-icons/fi';
 
-// IMPORTACIÓN DE IMÁGENES
-import yapeImg from '../../../images/yape-pago.png';
-import binanceImg from '../../../images/binance-pago.png';
-
-// TASA DE CAMBIO FIJA
-const TASA_CAMBIO = 3.55;
-// NÚMERO DE CONTACTO
-const WHATSAPP_NUMBER = '51940990278';
-
-// --- Estilos Ultra Modernos & Compactos ---
 const styles = {
-  container: { 
-    padding: '24px 16px', 
-    fontFamily: "'Inter', sans-serif", 
-    background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)',
-    minHeight: '100vh',
-    position: 'relative',
-    overflow: 'hidden',
-    color: '#e0e0e0'
-  },
-  backgroundDecoration: {
-    position: 'absolute', top: 0, right: 0, width: '500px', height: '500px',
-    background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)', zIndex: 0
-  },
+  // ... (TUS ESTILOS SE MANTIENEN IGUAL, NO LOS BORRES)
+  // Solo asegúrate de mantener tus estilos anteriores aquí
+  container: { padding: '24px 16px', fontFamily: "'Inter', sans-serif", background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #0f0f0f 100%)', minHeight: '100vh', position: 'relative', overflow: 'hidden', color: '#e0e0e0' },
+  backgroundDecoration: { position: 'absolute', top: 0, right: 0, width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)', zIndex: 0 },
   headerSection: { textAlign: 'center', marginBottom: '32px', position: 'relative', zIndex: 1 },
-  header: { 
-    fontSize: '2.5rem', fontWeight: '800', 
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-    marginBottom: '8px', letterSpacing: '-0.02em'
-  },
+  header: { fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px', letterSpacing: '-0.02em' },
   subtitle: { fontSize: '1.1rem', color: '#b0b0b0', maxWidth: '600px', margin: '0 auto' },
-  
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px', position: 'relative', zIndex: 1 },
   statCard: { background: 'rgba(30, 30, 30, 0.7)', backdropFilter: 'blur(20px)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', position: 'relative', overflow: 'hidden', transition: 'all 0.4s', cursor: 'pointer' },
   statCardHover: { transform: 'translateY(-4px) scale(1.01)', borderColor: 'rgba(102, 126, 234, 0.3)', boxShadow: '0 10px 20px rgba(0, 0, 0, 0.4)' },
@@ -49,96 +24,61 @@ const styles = {
   statValue: { fontSize: '2rem', fontWeight: '800', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px', lineHeight: '1' },
   statLabel: { fontSize: '0.9rem', color: '#a0a0a0', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' },
   statIcon: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '8px', padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-
   mainLayout: { display: 'flex', flexWrap: 'wrap', gap: '24px', position: 'relative', zIndex: 1 },
   columnForm: { flex: '1 1 350px', minWidth: '300px' }, 
   columnTable: { flex: '2 1 500px', minWidth: '300px' }, 
-
-  section: {
-    background: 'rgba(25, 25, 25, 0.8)', backdropFilter: 'blur(20px)', borderRadius: '16px',
-    padding: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', position: 'relative', overflow: 'hidden', height: '100%'
-  },
+  section: { background: 'rgba(25, 25, 25, 0.8)', backdropFilter: 'blur(20px)', borderRadius: '16px', padding: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', position: 'relative', overflow: 'hidden', height: '100%' },
   sectionHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' },
   sectionTitle: { fontSize: '1.2rem', fontWeight: '700', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '10px' },
   sectionCount: { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: '700' },
-
   form: { display: 'flex', flexDirection: 'column', gap: '16px' },
   inputGroup: { display: 'flex', flexDirection: 'column', position: 'relative' },
   inputWithIcon: { display: 'flex', alignItems: 'center', position: 'relative' },
   inputIcon: { position: 'absolute', left: '12px', color: '#666', zIndex: 10, width: '16px' },
-  input: { 
-    width: '100%', padding: '12px 16px 12px 40px', border: '1px solid rgba(255, 255, 255, 0.1)', 
-    borderRadius: '12px', fontSize: '0.9rem', backgroundColor: 'rgba(30, 30, 30, 0.8)', 
-    color: '#ffffff', fontFamily: 'inherit', backdropFilter: 'blur(20px)', transition: 'all 0.3s ease', boxSizing: 'border-box'
-  },
-  select: {
-    width: '100%', padding: '12px 16px 12px 40px', border: '1px solid rgba(255, 255, 255, 0.1)', 
-    borderRadius: '12px', fontSize: '0.9rem', backgroundColor: 'rgba(30, 30, 30, 0.8)', 
-    color: '#ffffff', fontFamily: 'inherit', cursor: 'pointer', appearance: 'none', transition: 'all 0.3s ease', boxSizing: 'border-box'
-  },
+  input: { width: '100%', padding: '12px 16px 12px 40px', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', fontSize: '0.9rem', backgroundColor: 'rgba(30, 30, 30, 0.8)', color: '#ffffff', fontFamily: 'inherit', backdropFilter: 'blur(20px)', transition: 'all 0.3s ease', boxSizing: 'border-box' },
+  select: { width: '100%', padding: '12px 16px 12px 40px', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', fontSize: '0.9rem', backgroundColor: 'rgba(30, 30, 30, 0.8)', color: '#ffffff', fontFamily: 'inherit', cursor: 'pointer', appearance: 'none', transition: 'all 0.3s ease', boxSizing: 'border-box' },
   inputFocus: { borderColor: '#667eea', backgroundColor: 'rgba(40, 40, 40, 0.9)', boxShadow: '0 0 0 2px rgba(102, 126, 234, 0.1)' },
   label: { marginBottom: '8px', fontWeight: '600', color: '#ccc', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' },
-  
-  button: { 
-    padding: '12px', border: 'none', borderRadius: '12px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-    color: 'white', fontSize: '0.9rem', fontWeight: '600', cursor: 'pointer', display: 'flex', 
-    alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.3s ease', 
-    marginTop: '8px', position: 'relative', overflow: 'hidden' 
-  },
+  button: { padding: '12px', border: 'none', borderRadius: '12px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', fontSize: '0.9rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.3s ease', marginTop: '8px', position: 'relative', overflow: 'hidden' },
   buttonHover: { transform: 'translateY(-2px)', boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)' },
   buttonGlow: { position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)', transition: 'left 0.5s ease' },
   buttonGlowHover: { left: '100%' },
-
   securityNote: { display: 'flex', alignItems: 'center', gap: '8px', padding: '12px', backgroundColor: 'rgba(102, 126, 234, 0.1)', borderRadius: '10px', border: '1px solid rgba(102, 126, 234, 0.2)', fontSize: '0.8rem', color: '#667eea' },
-  
   message: { textAlign: 'center', padding: '12px', borderRadius: '10px', marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '500', fontSize: '0.85rem' },
   success: { backgroundColor: 'rgba(39, 174, 96, 0.15)', color: '#2ecc71', border: '1px solid rgba(39, 174, 96, 0.3)' },
   error: { backgroundColor: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)' },
-
   tableContainer: { overflowX: 'auto', borderRadius: '12px' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' },
   th: { padding: '12px 10px', backgroundColor: 'rgba(40, 40, 40, 0.95)', fontWeight: '700', color: '#a0a0a0', textAlign: 'left', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', whiteSpace: 'nowrap' },
   td: { padding: '8px 10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e0e0e0', verticalAlign: 'middle' },
   tableRow: { transition: 'all 0.2s ease', cursor: 'pointer' },
   tableRowHover: { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
-
   statusBadge: { padding: '4px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: '70px', justifyContent: 'center', textTransform: 'uppercase' },
   statusPending: { background: 'rgba(255, 193, 7, 0.15)', color: '#ffc107', border: '1px solid rgba(255, 193, 7, 0.2)' },
   statusApproved: { background: 'rgba(39, 174, 96, 0.15)', color: '#2ecc71', border: '1px solid rgba(39, 174, 96, 0.2)' },
   statusRejected: { background: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.2)' },
-  
   amountCell: { display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '700', color: '#2ecc71', fontSize: '0.9rem' },
   referenceCode: { fontFamily: 'monospace', fontSize: '0.8rem', color: '#a0a0a0', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', transition: 'background 0.2s' },
   referenceCodeHover: { background: 'rgba(255,255,255,0.1)', color: 'white' },
   emptyState: { textAlign: 'center', padding: '40px 20px', color: '#a0a0a0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
-
   qrContainer: { marginTop: '16px', padding: '20px', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
   qrImage: { maxWidth: '220px', width: '100%', height: 'auto', borderRadius: '12px', marginBottom: '12px', border: '2px solid rgba(255, 255, 255, 0.1)' },
   conversionText: { color: '#2ecc71', fontSize: '1.1rem', fontWeight: '700', marginTop: '8px' },
   conversionLabel: { color: '#888', fontSize: '0.85rem', marginBottom: '4px' },
-
-  // BOTÓN WHATSAPP
-  wspButton: {
-    padding: '6px 12px',
-    backgroundColor: 'rgba(37, 211, 102, 0.15)',
-    color: '#25D366',
-    border: '1px solid rgba(37, 211, 102, 0.3)',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '0.75rem',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    transition: '0.2s'
-  }
+  wspButton: { padding: '6px 12px', backgroundColor: 'rgba(37, 211, 102, 0.15)', color: '#25D366', border: '1px solid rgba(37, 211, 102, 0.3)', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s' }
 };
 
 const RechargePage = () => {
-  const { user } = useAuth(); // Obtener datos del usuario
+  const { user } = useAuth();
+  
+  // --- NUEVOS ESTADOS DINÁMICOS ---
+  const [config, setConfig] = useState({ exchange_rate: 3.55, whatsapp_number: '' });
+  const [availableMethods, setAvailableMethods] = useState([]);
+  const [selectedMethodObj, setSelectedMethodObj] = useState(null); // Para guardar el objeto completo del método seleccionado
+
   const [formData, setFormData] = useState({
     amount_usd: '',
-    payment_method: 'Yape',
+    payment_method: '', // Se llenará dinámicamente
     transaction_reference: '',
   });
   
@@ -151,23 +91,51 @@ const RechargePage = () => {
   const [hoveredStat, setHoveredStat] = useState(null);
   const [hoveredRef, setHoveredRef] = useState(null);
 
+  // --- CARGAR CONFIGURACIÓN Y MÉTODOS DESDE EL BACKEND ---
+  const fetchConfig = async () => {
+    try {
+        const res = await apiClient.get('/config/recharge');
+        setConfig({
+            exchange_rate: res.data.exchange_rate,
+            whatsapp_number: res.data.whatsapp_number
+        });
+        
+        const methods = res.data.payment_methods;
+        setAvailableMethods(methods);
+
+        // Seleccionar el primer método por defecto si existe
+        if (methods.length > 0) {
+            setFormData(prev => ({ ...prev, payment_method: methods[0].name }));
+            setSelectedMethodObj(methods[0]);
+        }
+    } catch (err) {
+        console.error("Error cargando configuración:", err);
+    }
+  };
+
   const fetchHistory = async () => {
     try {
       const response = await apiClient.get('/recharges/history');
       setRequests(response.data);
     } catch (err) {
       setError('No se pudo cargar tu historial de recargas.');
-      console.error(err);
     }
   };
 
   useEffect(() => {
+    fetchConfig();
     fetchHistory();
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Si cambia el método de pago, actualizamos el objeto seleccionado para mostrar su QR
+    if (name === 'payment_method') {
+        const method = availableMethods.find(m => m.name === value);
+        setSelectedMethodObj(method);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -183,7 +151,11 @@ const RechargePage = () => {
     try {
       await apiClient.post('/recharges/request', { ...formData, proof_url: '' });
       setMessage('¡Solicitud enviada! Será revisada pronto.');
-      setFormData({ amount_usd: '', payment_method: 'Yape', transaction_reference: '' });
+      setFormData({ 
+          amount_usd: '', 
+          payment_method: availableMethods.length > 0 ? availableMethods[0].name : '', 
+          transaction_reference: '' 
+      });
       fetchHistory();
     } catch (err) {
       setError(err.response?.data?.error || 'Error al enviar la solicitud.');
@@ -195,9 +167,7 @@ const RechargePage = () => {
     alert('Referencia copiada al portapapeles');
   };
 
-  // --- NUEVA FUNCIÓN PARA WHATSAPP (CORREGIDA) ---
   const handleConfirmWsp = (req) => {
-      // Aquí usamos user.username que viene del AuthContext (que viene de /auth/me)
       const username = user?.username || 'N/A';
       const email = user?.email || '';
       
@@ -205,7 +175,8 @@ const RechargePage = () => {
 Mi usuario es: ${username} (${email})
 Referencia: ${req.transaction_reference}`;
       
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      // Usamos el número dinámico de la base de datos
+      const url = `https://wa.me/${config.whatsapp_number}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
   };
 
@@ -221,7 +192,8 @@ Referencia: ${req.transaction_reference}`;
     return <FiClock size={12} />;
   };
 
-  const amountInSoles = formData.amount_usd ? (parseFloat(formData.amount_usd) * TASA_CAMBIO).toFixed(2) : '0.00';
+  // Cálculo dinámico en soles usando la tasa de la BD
+  const amountInSoles = formData.amount_usd ? (parseFloat(formData.amount_usd) * config.exchange_rate).toFixed(2) : '0.00';
 
   const stats = [
     { value: requests.length, label: 'Solicitudes', icon: FiList },
@@ -282,36 +254,40 @@ Referencia: ${req.transaction_reference}`;
                     onFocus={() => setFocusedField('method')} onBlur={() => setFocusedField(null)}
                     style={{...styles.select, ...(focusedField === 'method' && styles.inputFocus)}}
                   >
-                    <option value="Yape">Yape</option>
-                    <option value="Plin">Plin</option>
-                    <option value="Binance">Binance</option>
+                    {availableMethods.length === 0 && <option>Cargando métodos...</option>}
+                    {availableMethods.map(method => (
+                        <option key={method.id} value={method.name}>{method.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               {/* --- SECCIÓN DE IMAGEN DE PAGO DINÁMICA --- */}
-              {(formData.payment_method === 'Yape' || formData.payment_method === 'Plin' || formData.payment_method === 'Binance') && (
+              {selectedMethodObj && (
                   <div style={styles.qrContainer}>
-                      <div style={styles.conversionLabel}>Escanea para pagar con {formData.payment_method}:</div>
+                      <div style={styles.conversionLabel}>Escanea para pagar con {selectedMethodObj.name}:</div>
                       
-                      {formData.payment_method === 'Binance' ? (
-                           <img src={binanceImg} alt="Binance QR" style={styles.qrImage} />
-                      ) : (
-                           <img src={yapeImg} alt="Yape/Plin QR" style={styles.qrImage} />
+                      {/* Imagen Dinámica desde BD */}
+                      <img src={selectedMethodObj.image_url} alt="QR Pago" style={styles.qrImage} />
+
+                      {selectedMethodObj.account_name && (
+                          <div style={{fontSize:'0.8rem', color:'#aaa', marginBottom:'8px'}}>
+                              Titular: {selectedMethodObj.account_name}
+                          </div>
                       )}
 
                       <div style={{marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 10, width: '100%'}}>
                           <div style={styles.conversionLabel}>
-                              Monto a enviar {formData.payment_method === 'Binance' ? '(USDT)' : '(Soles)'}:
+                              Monto a enviar {selectedMethodObj.currency === 'USD' ? '(USDT/USD)' : '(Soles)'}:
                           </div>
                           <div style={styles.conversionText}>
-                              {formData.payment_method === 'Binance' 
-                                  ? `$ ${parseFloat(formData.amount_usd || 0).toFixed(2)} USDT`
+                              {selectedMethodObj.currency === 'USD' 
+                                  ? `$ ${parseFloat(formData.amount_usd || 0).toFixed(2)} USD`
                                   : `S/ ${amountInSoles}`
                               }
                           </div>
                           <div style={{fontSize: '0.75rem', color: '#666', marginTop: 4}}>
-                              {formData.payment_method !== 'Binance' && `(Tipo de cambio: ${TASA_CAMBIO})`}
+                              {selectedMethodObj.currency !== 'USD' && `(Tipo de cambio: ${config.exchange_rate})`}
                           </div>
                       </div>
                   </div>
@@ -351,7 +327,7 @@ Referencia: ${req.transaction_reference}`;
           </div>
         </div>
 
-        {/* Columna Tabla Historial */}
+        {/* Columna Tabla Historial (Igual que antes) */}
         <div style={styles.columnTable}>
           <div style={styles.section}>
             <div style={styles.sectionHeader}>
@@ -368,7 +344,7 @@ Referencia: ${req.transaction_reference}`;
                     <th style={styles.th}>Método</th>
                     <th style={styles.th}>Referencia</th>
                     <th style={styles.th}>Estado</th>
-                    <th style={styles.th}>Acción</th> {/* NUEVA COLUMNA */}
+                    <th style={styles.th}>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -398,7 +374,6 @@ Referencia: ${req.transaction_reference}`;
                             {getStatusIcon(req.status)} {req.status}
                           </span>
                         </td>
-                        {/* NUEVO BOTÓN DE WHATSAPP */}
                         <td style={styles.td}>
                              <button 
                                 onClick={() => handleConfirmWsp(req)}
