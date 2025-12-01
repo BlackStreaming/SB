@@ -42,32 +42,65 @@ app.use(express.json());
 // ✅ PEGA ESTO (Nueva configuración Cloudinary)
 
 // 1. Configurar credenciales de Cloudinary
+// ✅ REEMPLAZA DESDE AQUÍ (Línea ~44 aprox)
+
+// 1. Configurar credenciales de Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 2. Configurar almacenamiento en la Nube
+// 2. Configurar almacenamiento en la Nube (CORREGIDO PARA GIFS)
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-        folder: 'blackstreaming_products', // Nombre de la carpeta en tu nube
-        allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif'], // ¡Soporta GIFs!
+    params: async (req, file) => {
+        return {
+            folder: 'blackstreaming_products',
+            // resource_type: 'auto' es CRUCIAL para GIFs animados
+            resource_type: 'auto', 
+            allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif'],
+            // public_id: opcional, Cloudinary genera uno si no lo pones
+        };
     },
 });
 
-const upload = multer({ storage: storage });
+// 3. Configurar Multer con Límite de Tamaño aumentado
+const upload = multer({ 
+    storage: storage,
+    limits: { 
+        fileSize: 10 * 1024 * 1024 // Aumentado a 10MB (Los GIFs suelen ser pesados)
+    } 
+});
 
-// 3. Ruta de subida (Ahora devuelve URL de Cloudinary)
-app.post('/api/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No se subió ninguna imagen' });
-    }
-    // Cloudinary devuelve la URL directa en 'path'
-    const imageUrl = req.file.path; 
-    console.log("Nube:", imageUrl);
-    res.json({ imageUrl });
+// 4. Ruta de subida con MEJOR manejo de errores
+app.post('/api/upload', (req, res) => {
+    const uploadSingle = upload.single('image');
+
+    uploadSingle(req, res, (err) => {
+        if (err) {
+            // Error de Multer (ej: archivo muy grande) o de Cloudinary
+            console.error("Error al subir imagen:", err);
+            
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).json({ error: 'La imagen es muy pesada (Máx 10MB).' });
+            }
+            if (err.message && err.message.includes('File format')) {
+                 return res.status(400).json({ error: 'Formato no permitido.' });
+            }
+            
+            return res.status(500).json({ error: 'Error al subir a la nube: ' + err.message });
+        }
+
+        // Si no hay error, seguimos
+        if (!req.file) {
+            return res.status(400).json({ error: 'No se subió ninguna imagen' });
+        }
+
+        const imageUrl = req.file.path; 
+        console.log("Subida exitosa:", imageUrl);
+        res.json({ imageUrl });
+    });
 });
 
 // 4. CONEXIÓN CONDICIONAL A LA BASE DE DATOS POSTGRESQL
@@ -3814,4 +3847,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
