@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '/src/services/apiClient.js'; 
 import { 
   FiDollarSign, FiCheck, FiX, FiMessageSquare, FiExternalLink, 
-  FiCalendar, FiUser, FiCreditCard, FiHash, FiAlertCircle 
+  FiCalendar, FiUser, FiCreditCard, FiHash, FiAlertCircle, FiClock, FiFileText
 } from 'react-icons/fi';
 
 // --- Estilos Unified Compact Theme (Dark Glass - Admin Edition) ---
@@ -31,10 +31,11 @@ const styles = {
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px'
   },
 
-  // Tabla
+  // Secciones (Tabla)
   tableSection: {
     background: 'rgba(25, 25, 25, 0.8)', backdropFilter: 'blur(20px)', borderRadius: '16px',
-    padding: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', position: 'relative', zIndex: 1
+    padding: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', position: 'relative', zIndex: 1,
+    marginBottom: '30px' // Espacio entre tablas
   },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   sectionTitle: { fontSize: '1.2rem', fontWeight: '700', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' },
@@ -51,7 +52,6 @@ const styles = {
     padding: '14px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
     color: '#e0e0e0', verticalAlign: 'middle' 
   },
-  tableRow: { transition: 'background-color 0.2s ease' },
   
   // Badges
   statusBadge: { padding: '4px 10px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '4px' },
@@ -84,14 +84,16 @@ const styles = {
   btnCancel: { padding: '10px 20px', background: 'transparent', border: '1px solid #555', color: '#aaa', borderRadius: '10px', cursor: 'pointer' },
   btnConfirmReject: { padding: '10px 20px', background: '#e74c3c', border: 'none', color: '#fff', borderRadius: '10px', cursor: 'pointer', fontWeight: '600' },
 
-  // Estados
+  // Utils
   loading: { textAlign: 'center', padding: '60px', color: '#888', fontSize: '1.1rem' },
-  emptyState: { textAlign: 'center', padding: '60px', color: '#666' },
-  error: { background: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)', padding: '16px', borderRadius: '12px', marginBottom: '20px' }
+  emptyState: { textAlign: 'center', padding: '40px', color: '#666', fontStyle: 'italic' },
+  error: { background: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)', padding: '16px', borderRadius: '12px', marginBottom: '20px' },
+  notesText: { fontSize: '0.75rem', color: '#aaa', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display:'inline-block' }
 };
 
 const RechargeManagement = () => {
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState([]); // Pendientes
+  const [history, setHistory] = useState([]);   // Historial
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -100,22 +102,41 @@ const RechargeManagement = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
 
-  const fetchRequests = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get('/admin/recharges/pending');
-      setRequests(response.data);
+      
+      // Llamadas paralelas para optimizar
+      const [pendingRes, historyRes] = await Promise.all([
+        apiClient.get('/admin/recharges/pending'),
+        apiClient.get('/admin/recharges/history')
+      ]);
+
+      setRequests(pendingRes.data);
+      setHistory(historyRes.data);
+
     } catch (err) {
-      setError('No se pudo cargar la lista de solicitudes.');
-      console.error(err);
+      // Si falla history (quizás no agregaste la ruta backend aun), al menos muestra pendientes
+      if (err.config && err.config.url.includes('history')) {
+         console.warn("Ruta de historial no encontrada. Asegúrate de actualizar el backend.");
+         setHistory([]); // Fallback vacío
+         // Intentar cargar solo pendientes si el historial falló
+         try {
+            const pendingRes = await apiClient.get('/admin/recharges/pending');
+            setRequests(pendingRes.data);
+         } catch(e) { setError('Error de conexión.'); }
+      } else {
+         setError('No se pudo cargar la información.');
+         console.error(err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRequests();
+    fetchData();
   }, []);
 
   const handleOpenRejectModal = (request) => {
@@ -129,29 +150,16 @@ const RechargeManagement = () => {
     setSelectedRequest(null);
   };
 
-  const handleProcessRequest = async (status) => {
-    if (status === 'rechazado' && !selectedRequest) return;
-    
-    // Si es aprobación directa desde la tabla (sin modal)
-    const id = selectedRequest ? selectedRequest.id : null; 
-    
-    // Pero espera, el botón de aprobar llama a esta función también.
-    // Necesitamos asegurarnos de tener el ID correcto.
-    // Modificaré la llamada del botón aprobar para que pase el ID o setee el selectedRequest primero.
-
-    // Vamos a asumir que para aprobar, pasamos el ID como segundo argumento si no hay modal
-    // O mejor, simplificamos: el botón de aprobar setea el selectedRequest y llama.
-  };
-  
-  // Wrapper mejorado para procesar
   const submitProcess = async (request, status) => {
       try {
           await apiClient.put(`/admin/recharges/${request.id}`, {
               status: status,
               admin_notes: status === 'rechazado' ? adminNotes : ''
           });
-          fetchRequests();
+          
+          fetchData(); // Recargar ambas tablas
           if(status === 'rechazado') handleCloseModal();
+          
       } catch (err) {
           setError(err.response?.data?.error || 'Error al procesar.');
       }
@@ -163,18 +171,19 @@ const RechargeManagement = () => {
     return styles.statusPending;
   };
 
-  if (loading) return <div style={styles.loading}>Cargando solicitudes...</div>;
+  if (loading) return <div style={styles.loading}>Cargando panel de recargas...</div>;
 
   return (
     <div style={styles.container}>
       <div style={styles.backgroundDecoration} />
       
       <div style={styles.headerSection}>
-        <h1 style={styles.header}>Solicitudes de Recarga</h1>
+        <h1 style={styles.header}>Gestión de Recargas</h1>
       </div>
 
       {error && <div style={styles.error}><FiAlertCircle style={{verticalAlign:'middle'}}/> {error}</div>}
       
+      {/* --- TABLA 1: PENDIENTES --- */}
       <div style={styles.tableSection}>
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}><FiDollarSign /> Pendientes de Revisión</div>
@@ -192,9 +201,8 @@ const RechargeManagement = () => {
                   <th style={styles.th}><FiUser /> Usuario</th>
                   <th style={styles.th}><FiDollarSign /> Monto</th>
                   <th style={styles.th}><FiCreditCard /> Método</th>
-                  <th style={styles.th}><FiHash /> Referencia</th>
+                  <th style={styles.th}><FiHash /> Ref</th>
                   <th style={styles.th}>Prueba</th>
-                  <th style={styles.th}>Estado</th>
                   <th style={styles.th}>Acciones</th>
                 </tr>
               </thead>
@@ -214,15 +222,9 @@ const RechargeManagement = () => {
                         <a href={req.proof_url} target="_blank" rel="noopener noreferrer" style={styles.proofLink}>
                           <FiExternalLink /> Ver
                         </a>
-                      ) : <span style={{color:'#666', fontSize:'0.8rem'}}>Sin prueba</span>}
+                      ) : <span style={{color:'#666', fontSize:'0.8rem'}}>--</span>}
                     </td>
                     <td style={styles.td}>
-                      <span style={{...styles.statusBadge, ...getStatusStyle(req.status)}}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      {req.status === 'pendiente' && (
                         <div style={styles.actionCell}>
                           <button 
                             style={{...styles.actionButton, ...styles.approveButton}}
@@ -239,7 +241,67 @@ const RechargeManagement = () => {
                             <FiX />
                           </button>
                         </div>
-                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* --- TABLA 2: HISTORIAL (NUEVO) --- */}
+      <div style={styles.tableSection}>
+        <div style={styles.sectionHeader}>
+          <div style={styles.sectionTitle}><FiClock /> Historial Reciente</div>
+          <div style={{...styles.sectionCount, background: 'linear-gradient(135deg, #444 0%, #666 100%)'}}>{history.length}</div>
+        </div>
+
+        {history.length === 0 ? (
+          <div style={styles.emptyState}><p>No hay historial de recargas procesadas.</p></div>
+        ) : (
+          <div style={styles.tableContainer}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Procesado</th>
+                  <th style={styles.th}>Usuario</th>
+                  <th style={styles.th}>Monto</th>
+                  <th style={styles.th}>Método / Ref</th>
+                  <th style={styles.th}>Estado</th>
+                  <th style={styles.th}><FiMessageSquare /> Notas Admin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((req, idx) => (
+                  <tr key={req.id} style={{backgroundColor: idx%2===0 ? 'transparent' : 'rgba(255,255,255,0.02)'}}>
+                    <td style={styles.td}>
+                        {req.reviewed_at ? new Date(req.reviewed_at).toLocaleDateString() : new Date(req.created_at).toLocaleDateString()}
+                        <div style={{fontSize:'0.7rem', color:'#666'}}>
+                            {req.reviewed_at ? new Date(req.reviewed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                        </div>
+                    </td>
+                    <td style={styles.td}>
+                        <div style={{color:'#ddd'}}>{req.username}</div>
+                    </td>
+                    <td style={{...styles.td, color: req.status === 'aprobado' ? '#2ecc71' : '#ff6b6b', fontWeight:'bold'}}>
+                        ${parseFloat(req.amount_usd).toFixed(2)}
+                    </td>
+                    <td style={styles.td}>
+                        <div style={{fontSize:'0.8rem'}}>{req.payment_method}</div>
+                        <div style={{fontSize:'0.7rem', color:'#888', fontFamily:'monospace'}}>{req.transaction_reference}</div>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{...styles.statusBadge, ...getStatusStyle(req.status)}}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td style={styles.td}>
+                        {req.admin_notes ? (
+                            <span style={styles.notesText} title={req.admin_notes}>
+                                {req.admin_notes}
+                            </span>
+                        ) : <span style={{color:'#444'}}>--</span>}
                     </td>
                   </tr>
                 ))}
