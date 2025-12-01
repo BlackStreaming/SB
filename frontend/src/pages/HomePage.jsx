@@ -339,7 +339,7 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Contenedor corregido */}
+            {/* Contenedor Categorías */}
             <div className="category-grid">
               {categories.map(cat => (
                 <CategoryCard category={cat} key={cat.id} />
@@ -395,7 +395,7 @@ const HomePage = () => {
         </LazySection>
       </div>
 
-      {/* ESTILOS CSS CORREGIDOS Y OPTIMIZADOS */}
+      {/* ESTILOS CSS CORREGIDOS */}
       <style>{`
         body, html {
           overflow-x: hidden !important;
@@ -403,60 +403,64 @@ const HomePage = () => {
           background-color: #0c0c0c;
         }
 
-        /* --- FIX RESPONSIVE HEIGHT --- */
+        /* --- FIX CARRUSEL RESPONSIVE --- */
         @media (min-width: 768px) {
           .carousel-responsive-height {
             min-height: 480px !important;
           }
         }
 
-        /* --- CATEGORÍAS CORREGIDAS --- */
+        /* --- CATEGORÍAS (Solución Final) --- */
         .category-grid {
           display: grid;
           width: 100%;
-          /* MÓVIL: Empezamos con 2 columnas para que no se vea una lista infinita */
+          /* MÓVIL: 2 columnas para que no sea una lista larga */
           grid-template-columns: repeat(2, 1fr);
-          /* Gap ajustado */
           gap: 15px; 
-          /* Importante: asegura altura automática en filas */
+          /* CRUCIAL: 'auto' permite que el texto crezca hacia abajo sin cortarse */
           grid-auto-rows: auto;
         }
 
-        /* Aseguramos que los hijos (las cards) respeten el espacio */
+        /* Estilo para los hijos (las tarjetas) */
         .category-grid > div, 
         .category-grid > a {
-          position: relative;
           width: 100%;
           height: auto;
-          /* Aspect Ratio cuadrado como en tu imagen */
-          aspect-ratio: 1 / 1; 
+          min-height: 100%;
           display: flex;
           flex-direction: column;
-          overflow: hidden; /* Evita que la imagen se salga y tape a otra */
-          border-radius: 12px; /* Un toque estético acorde a la imagen */
+          /* Quitamos el overflow hidden estricto para que el texto se vea */
+          /* Quitamos aspect-ratio forzado en el contenedor padre */
         }
 
-        /* TABLETS PEQUEÑAS (3 columnas) */
-        @media (min-width: 480px) {
+        /* BREAKPOINTS RESPONSIVE */
+        
+        /* Tablets (3 columnas) */
+        @media (min-width: 500px) {
           .category-grid { grid-template-columns: repeat(3, 1fr); }
         }
         
-        /* TABLETS/LAPTOPS (4 columnas) */
+        /* Tablets grandes / Laptops pequeñas (4 columnas) */
         @media (min-width: 768px) {
           .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
         }
 
-        /* DESKTOP (6 columnas - similar a tu foto) */
+        /* Desktop Estándar (5 columnas) */
         @media (min-width: 1024px) {
+          .category-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+        
+        /* Pantallas Grandes (6 columnas - como tu foto) */
+        @media (min-width: 1280px) {
           .category-grid { grid-template-columns: repeat(6, 1fr); }
         }
         
-        /* PANTALLAS EXTRA GRANDES (8 columnas) */
-        @media (min-width: 1440px) {
+        /* Extra Grandes (8 columnas) */
+        @media (min-width: 1600px) {
           .category-grid { grid-template-columns: repeat(8, 1fr); }
         }
 
-        /* --- PRODUCTOS (Grid estándar) --- */
+        /* --- PRODUCTOS --- */
         .product-grid {
           display: grid;
           gap: 20px;
@@ -482,11 +486,8 @@ const HomePage = () => {
         @media (min-width: 1400px) {
           .product-grid { grid-template-columns: repeat(5, 1fr); }
         }
-        @media (min-width: 1700px) {
-          .product-grid { grid-template-columns: repeat(6, 1fr); }
-        }
 
-        /* --- HOVER EFFECTS --- */
+        /* --- ANIMACIONES HOVER --- */
         .force-no-border > * {
           border-color: rgba(255, 255, 255, 0.1) !important;
           transition: transform 0.3s ease, border-color 0.3s ease !important;
