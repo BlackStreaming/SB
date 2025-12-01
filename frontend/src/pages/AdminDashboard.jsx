@@ -5,14 +5,14 @@ import {
   FiPackage, FiTruck, FiGift, FiShoppingCart, FiLayers,
   FiBarChart2, FiLogOut, FiSearch, FiDownload, FiUpload,
   FiEye, FiEdit, FiTrash2, FiFilter, FiRefreshCw,
-  FiCheckCircle, FiClock, FiAlertCircle, FiMenu
+  FiCheckCircle, FiClock, FiAlertCircle, FiMenu,
+  FiCreditCard // <--- 1. AGREGADO NUEVO ÍCONO
 } from 'react-icons/fi';
 
 // Importamos el contexto de autenticación
 import { useAuth } from '/src/context/AuthContext';
 
-// 🛑 SOLUCIÓN DEL LOGO: Importamos la imagen como un módulo
-// La ruta es '../../images/BLACK.png' porque AdminDashboard.jsx está en src/components/layout/
+// Importamos el logo
 import LogoBlack from '../images/BLACK.png'; 
 
 // Importamos los componentes de gestión
@@ -27,7 +27,10 @@ import ProviderManagement from '../features/dashboard/AdminDashboard/ProviderMan
 import RedeemableItemsManagement from '../features/dashboard/AdminDashboard/RedeemableItemsManagement.jsx';
 import AdminOrderReports from '../features/dashboard/AdminDashboard/AdminOrderReports.jsx';
 
-// --- ESTILOS VISUALES "ULTRA MODERNOS" (Idénticos a User/Provider) ---
+// --- 2. IMPORTAMOS EL NUEVO COMPONENTE ---
+import RechargeSettings from '../features/dashboard/AdminDashboard/RechargeSettings.jsx';
+
+// --- ESTILOS VISUALES "ULTRA MODERNOS" ---
 const styles = {
   layout: {
     display: 'flex',
@@ -311,7 +314,8 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
     {
       title: 'Configuración',
       items: [
-        { path: '/admin/sitio', label: 'Configuración Sitio', icon: FiSettings },
+        { path: '/admin/sitio', label: 'Config. Sitio', icon: FiSettings },
+        { path: '/admin/config-recargas', label: 'Config. Recargas', icon: FiCreditCard }, // <--- 3. AGREGADA AL MENÚ
         { path: '/admin/cupones', label: 'Cupones', icon: FiTag },
         { path: '/admin/rangos', label: 'Rangos', icon: FiAward },
         { path: '/admin/recompensas', label: 'Recompensas', icon: FiGift }
@@ -320,7 +324,7 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
     {
       title: 'Operaciones',
       items: [
-        { path: '/admin/recargas', label: 'Recargas', icon: FiDollarSign },
+        { path: '/admin/recargas', label: 'Solicitudes Recarga', icon: FiDollarSign },
         { path: '/admin/proveedores', label: 'Proveedores', icon: FiTruck }
       ]
     }
@@ -335,12 +339,11 @@ const Sidebar = ({ isOpen, onClose, user, isMobile }) => {
       <div style={sidebarStyle}>
         <div style={styles.sidebarHeader}>
           <Link to="/" style={styles.logoContainer} onClick={isMobile ? onClose : undefined}>
-              {/* 🛑 USO DEL LOGO IMPORTADO */}
-             <img 
-                 src={LogoBlack} // <-- ¡CORREGIDO!
-                 alt="Logo" 
-                 style={styles.logoImage} 
-             />
+              <img 
+                  src={LogoBlack} 
+                  alt="Logo" 
+                  style={styles.logoImage} 
+              />
           </Link>
           <div style={styles.subtitle}>PANEL ADMINISTRADOR</div>
         </div>
@@ -394,6 +397,9 @@ const PageHeader = ({ currentPage }) => {
     const pageInfo = {
         '/admin/categorias': { title: 'Gestión de Categorías', desc: 'Organiza las categorías de productos' },
         '/admin/sitio': { title: 'Configuración del Sitio', desc: 'Ajustes generales del sistema' },
+        // --- 4. INFO DEL HEADER PARA LA NUEVA PAGINA ---
+        '/admin/config-recargas': { title: 'Configuración de Recargas', desc: 'Gestiona Tasa de Cambio y Métodos de Pago' },
+        
         '/admin/usuarios': { title: 'Gestión de Usuarios', desc: 'Administra permisos y roles' },
         '/admin/cupones': { title: 'Gestión de Cupones', desc: 'Códigos de descuento' },
         '/admin/recargas': { title: 'Solicitudes de Recarga', desc: 'Aprobar o rechazar recargas' },
@@ -414,13 +420,10 @@ const PageHeader = ({ currentPage }) => {
     );
 };
 
-// --- CORRECCIÓN AQUÍ: User Info Top Bar Dinámico ---
+// --- User Info Top Bar ---
 const UserInfo = ({ user }) => {
-    // Intentamos obtener el nombre de usuario, o usamos el email, o un fallback
     const displayName = user?.username || user?.email || 'Administrador';
-    // Obtenemos el rol si existe
     const displayRole = user?.role ? `Rol: ${user.role.toUpperCase()}` : 'Administrador del Sistema';
-    // Inicial para el avatar
     const initial = displayName.charAt(0).toUpperCase();
 
     return (
@@ -449,9 +452,8 @@ const MobileHeader = ({ onMenuClick }) => (
             <FiMenu size={22} />
         </button>
         <Link to="/">
-            {/* 🛑 USO DEL LOGO IMPORTADO */}
             <img 
-                src={LogoBlack} // <-- ¡CORREGIDO!
+                src={LogoBlack} 
                 alt="Logo" 
                 style={styles.mobileLogo}
             />
@@ -459,84 +461,6 @@ const MobileHeader = ({ onMenuClick }) => (
         <div style={{ width: '40px' }} />
     </div>
 );
-
-// --- Componente de Tabla de Pedidos (Demo) ---
-const OrdersPage = () => {
-  const [orders] = useState([
-    { id: 77, product: 'NETFLIX PREMIUM 4K', client: 'Reddo', supplier: 'Prov A', price: '$5.00', status: 'active', daysLeft: 2 },
-    { id: 78, product: 'SPOTIFY DUO', client: 'TechCorp', supplier: 'Prov B', price: '$3.50', status: 'pending', daysLeft: 15 },
-    { id: 79, product: 'DISNEY+ ANUAL', client: 'Juan P.', supplier: 'Prov C', price: '$20.00', status: 'expired', daysLeft: 0 }
-  ]);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return { bg: 'rgba(34, 197, 94, 0.2)', text: '#4ade80', icon: <FiCheckCircle /> };
-      case 'pending': return { bg: 'rgba(234, 179, 8, 0.2)', text: '#facc15', icon: <FiClock /> };
-      case 'expired': return { bg: 'rgba(239, 68, 68, 0.2)', text: '#f87171', icon: <FiAlertCircle /> };
-      default: return { bg: 'rgba(100,100,100,0.2)', text: '#ddd' };
-    }
-  };
-
-  return (
-    <div style={styles.internalCard}>
-      <div style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
-          <div style={{flex: 1, minWidth: '200px', position: 'relative'}}>
-            <FiSearch style={{position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa'}} />
-            <input 
-                placeholder="Buscar pedido..." 
-                style={{
-                    width: '100%', padding: '10px 10px 10px 35px', borderRadius: '8px', 
-                    border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white'
-                }} 
-            />
-          </div>
-          <button style={{padding: '10px 15px', borderRadius: '8px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer', display: 'flex', gap: '5px', alignItems: 'center'}}>
-            <FiFilter /> Filtrar
-          </button>
-      </div>
-
-      <div style={{overflowX: 'auto'}}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>ID</th>
-                <th style={styles.th}>Producto</th>
-                <th style={styles.th}>Cliente</th>
-                <th style={styles.th}>Precio</th>
-                <th style={styles.th}>Estado</th>
-                <th style={styles.th}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => {
-                  const statusInfo = getStatusColor(order.status);
-                  return (
-                  <tr key={order.id}>
-                    <td style={styles.td}>#{order.id}</td>
-                    <td style={styles.td}><span style={{fontWeight:'600', color: 'white'}}>{order.product}</span></td>
-                    <td style={styles.td}>{order.client}</td>
-                    <td style={styles.td}>{order.price}</td>
-                    <td style={styles.td}>
-                      <span style={{...styles.statusBadge, backgroundColor: statusInfo.bg, color: statusInfo.text}}>
-                          {statusInfo.icon} {order.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                        <div style={{display: 'flex', gap: '8px'}}>
-                          <button style={{background:'none', border:'none', color:'#667eea', cursor:'pointer'}}><FiEye size={18}/></button>
-                          <button style={{background:'none', border:'none', color:'#aaa', cursor:'pointer'}}><FiEdit size={18}/></button>
-                          <button style={{background:'none', border:'none', color:'#ff4d4d', cursor:'pointer'}}><FiTrash2 size={18}/></button>
-                        </div>
-                    </td>
-                  </tr>
-                  );
-              })}
-            </tbody>
-          </table>
-      </div>
-    </div>
-  );
-};
 
 // --- Dashboard Principal ---
 const AdminDashboard = () => {
@@ -557,8 +481,6 @@ const AdminDashboard = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
-
-  // const CustomAdminOrderReports = () => <OrdersPage />; // No es necesario si ya usas AdminOrderReports
 
   if (isLoading) return <div style={{color:'white', padding:'50px', textAlign:'center'}}>Cargando Admin...</div>;
   if (!user) return <Navigate to="/login" replace />; 
@@ -592,6 +514,10 @@ const AdminDashboard = () => {
                 
                 <Route path="categorias" element={<CategoryManagement />} />
                 <Route path="sitio" element={<SiteSettings />} />
+                
+                {/* --- 5. AGREGADA LA RUTA --- */}
+                <Route path="config-recargas" element={<RechargeSettings />} />
+
                 <Route path="usuarios" element={<UserManagement />} />
                 <Route path="cupones" element={<CouponManagement />} />
                 <Route path="recargas" element={<RechargeManagement />} />
