@@ -5,7 +5,8 @@ import apiClient from '/src/services/apiClient.js';
 import {
   FiDollarSign, FiShoppingCart, FiTrendingUp, FiPackage, FiRefreshCw,
   FiDownload, FiSearch, FiCalendar, FiFilter, FiUser, FiFileText,
-  FiCheckCircle, FiClock, FiXCircle, FiActivity, FiBarChart2, FiDatabase
+  FiCheckCircle, FiClock, FiXCircle, FiActivity, FiBarChart2, FiDatabase,
+  FiTruck, FiBox // Iconos para Proveedor y Producto
 } from 'react-icons/fi';
 
 // --- Estilos Unified Compact Theme (Dark Glass) ---
@@ -158,34 +159,47 @@ const StatCard = ({ value, label, icon: Icon, trend, isPositive }) => (
 const AdminOrderReports = () => {
   const [orders, setOrders] = useState([]);
   const [summary, setSummary] = useState({ total_revenue: 0, total_orders: 0, daily_revenue: 0, avg_order_value: 0, previous_period_comparison: 0 });
-  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Listas para los dropdowns
+  const [categories, setCategories] = useState([]);
+  const [providers, setProviders] = useState([]); 
+  const [productsList, setProductsList] = useState([]);
+
   // Filtros
   const [search, setSearch] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [providerId, setProviderId] = useState(''); 
+  const [productId, setProductId] = useState(''); 
   const [dateRange, setDateRange] = useState('today');
 
-  // Carga inicial
+  // Carga inicial de metadatos (Categorías, Proveedores, Productos)
   useEffect(() => {
-    fetchCategories();
+    const fetchMetadata = async () => {
+        try {
+            const [catRes, provRes, prodRes] = await Promise.all([
+                apiClient.get('/api/categories-admin'),
+                apiClient.get('/api/admin/lists/providers'), 
+                apiClient.get('/api/admin/lists/products')   
+            ]);
+            setCategories(catRes.data);
+            setProviders(provRes.data);
+            setProductsList(prodRes.data);
+        } catch (err) {
+            console.error('Error fetching metadata:', err);
+        }
+    };
+    fetchMetadata();
   }, []);
 
   // Carga de reportes al cambiar filtros
   useEffect(() => {
     fetchReports();
-  }, [search, startDate, endDate, categoryId, statusFilter]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await apiClient.get('/api/categories-admin');
-      setCategories(response.data);
-    } catch (err) { console.error('Error fetching categories:', err); }
-  };
+  }, [search, startDate, endDate, categoryId, statusFilter, providerId, productId]);
 
   const applyQuickDateRange = (range) => {
     setDateRange(range);
@@ -225,6 +239,10 @@ const AdminOrderReports = () => {
       if (endDate) params.append('end_date', endDate);
       if (categoryId) params.append('category_id', categoryId);
       if (statusFilter) params.append('status', statusFilter);
+      
+      // Agregamos los nuevos parámetros
+      if (providerId) params.append('provider_id', providerId);
+      if (productId) params.append('product_id', productId);
 
       const [summaryRes, ordersRes] = await Promise.all([
         apiClient.get(`/admin/reports/summary?${params}`),
@@ -307,6 +325,7 @@ const AdminOrderReports = () => {
                 </button>
             ))}
         </div>
+        
         <div style={styles.filterGrid}>
           <div>
             <label style={styles.inputLabel}><FiSearch size={14} /> Buscar</label>
@@ -320,6 +339,7 @@ const AdminOrderReports = () => {
             <label style={styles.inputLabel}><FiCalendar size={14} /> Hasta</label>
             <input type="date" style={styles.input} value={endDate} onChange={e => { setEndDate(e.target.value); setDateRange('custom'); }} />
           </div>
+          
           <div>
             <label style={styles.inputLabel}><FiFilter size={14} /> Categoría</label>
             <select style={styles.select} value={categoryId} onChange={e => setCategoryId(e.target.value)}>
@@ -327,6 +347,7 @@ const AdminOrderReports = () => {
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+
           <div>
             <label style={styles.inputLabel}><FiActivity size={14} /> Estado</label>
             <select style={styles.select} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
@@ -337,6 +358,25 @@ const AdminOrderReports = () => {
               <option value="fallido">Fallido</option>
             </select>
           </div>
+
+          {/* FILTRO PROVEEDOR */}
+          <div>
+            <label style={styles.inputLabel}><FiTruck size={14} /> Proveedor</label>
+            <select style={styles.select} value={providerId} onChange={e => setProviderId(e.target.value)}>
+              <option value="">Todos</option>
+              {providers.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+            </select>
+          </div>
+
+          {/* FILTRO PRODUCTO */}
+          <div>
+            <label style={styles.inputLabel}><FiBox size={14} /> Producto</label>
+            <select style={styles.select} value={productId} onChange={e => setProductId(e.target.value)}>
+              <option value="">Todos</option>
+              {productsList.map(prod => <option key={prod.id} value={prod.id}>{prod.name}</option>)}
+            </select>
+          </div>
+
         </div>
       </div>
 
@@ -363,9 +403,12 @@ const AdminOrderReports = () => {
                   <th style={styles.th}>ID</th>
                   <th style={styles.th}>Fecha</th>
                   <th style={styles.th}>Cliente</th>
-                  <th style={styles.th}>Items</th>
+                  
+                  {/* COLUMNAS NUEVAS */}
+                  <th style={styles.th}>Productos</th>
+                  <th style={styles.th}>Proveedores</th>
+                  
                   <th style={styles.th}>Total</th>
-                  <th style={styles.th}>Cupón</th>
                   <th style={styles.th}>Estado</th>
                 </tr>
               </thead>
@@ -378,9 +421,25 @@ const AdminOrderReports = () => {
                       <div style={{fontWeight:500}}>{order.username || 'Invitado'}</div>
                       <div style={{fontSize:'0.75rem', color:'#888'}}>{order.user_email}</div>
                     </td>
-                    <td style={styles.td}>{order.item_count}</td>
+
+                    {/* DATOS DE PRODUCTOS (Concatenados desde el backend) */}
+                    <td style={styles.td}>
+                       <div style={{fontSize:'0.85rem', color:'#e0e0e0', maxWidth:'200px', whiteSpace:'normal'}}>
+                           {order.product_names || '-'}
+                       </div>
+                       <div style={{fontSize:'0.7rem', color:'#888'}}>Items: {order.item_count}</div>
+                    </td>
+
+                    {/* DATOS DE PROVEEDORES (Concatenados desde el backend) */}
+                    <td style={styles.td}>
+                       <div style={{fontSize:'0.85rem', color:'#667eea'}}>
+                           <FiTruck size={10} style={{marginRight:4}}/>
+                           {order.provider_names || '-'}
+                       </div>
+                    </td>
+
                     <td style={{...styles.td, color:'#2ecc71', fontWeight:700}}>${parseFloat(order.total_amount_usd).toFixed(2)}</td>
-                    <td style={styles.td}>{order.coupon_name || '-'}</td>
+                    
                     <td style={styles.td}>
                       <span style={{...styles.statusBadge, ...getStatusStyle(order.status)}}>
                         {getStatusIcon(order.status)} {order.status}
