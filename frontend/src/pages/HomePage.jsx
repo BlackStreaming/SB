@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
 import CategoryCard from '/src/components/ui/CategoryCard.jsx';
 import PaymentMethods from '/src/components/layout/PaymentMethods.jsx';
+// Importamos el ChatBot que faltaba
 import ChatBot from '/src/components/ui/ChatBot.jsx'; 
 import { 
   FiTrendingUp, FiStar, FiGrid, FiRefreshCw, FiAlertTriangle, 
@@ -26,7 +28,7 @@ const styles = {
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
     display: 'flex',
-    minHeight: '220px',
+    minHeight: '220px', // Altura reservada en móvil
   },
   content: {
     maxWidth: '1600px',
@@ -103,21 +105,21 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   },
-  // --- BOTONES FLOTANTES Y CHAT ---
+  // --- ACTUALIZADO: Estilos para botones flotantes y Chat ---
   floatingButtons: {
     position: 'fixed',
     right: '20px',
     bottom: '20px',
     zIndex: 999,
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
+    flexDirection: 'column', // Apilar verticalmente
+    alignItems: 'flex-end',    // Alinear a la derecha
     gap: '15px',
-    pointerEvents: 'none' // Permite clicks a través del área vacía
+    pointerEvents: 'none'      // Deja pasar clicks en el área vacía
   },
   chatWrapper: {
     position: 'relative',
-    pointerEvents: 'auto',
+    pointerEvents: 'auto',     // Reactiva clicks para el chat
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end'
@@ -157,7 +159,7 @@ const styles = {
     opacity: 0,
     transform: 'translateY(20px)',
     transition: 'all 0.3s ease',
-    pointerEvents: 'auto' 
+    pointerEvents: 'auto' // Reactiva clicks para el botón
   },
   scrollToTopButtonVisible: {
     opacity: 1,
@@ -207,11 +209,13 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  // Estado para mostrar el mensajito del chat
   const [showChatHint, setShowChatHint] = useState(false);
 
-  // Manejo del Scroll
+  // Scroll más suave usando requestAnimationFrame
   useEffect(() => {
     let ticking = false;
+
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
@@ -221,11 +225,15 @@ const HomePage = () => {
         ticking = true;
       }
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
-  // Mostrar el mensaje del chat después de 3 segundos
+  // Efecto para mostrar el mensaje "Hola..." después de 3 segundos
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowChatHint(true);
@@ -233,7 +241,6 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch de datos
   const fetchHomeData = async () => {
     try {
       setLoading(true);
@@ -305,23 +312,21 @@ const HomePage = () => {
         <Carousel />
       </div>
 
-      {/* --- BOTONES FLOTANTES (Chat + Subir) --- */}
+      {/* --- BOTONES FLOTANTES: ChatBot + Subir --- */}
       <div style={styles.floatingButtons}>
         
-        {/* Contenedor del Chat con Mensaje Flotante */}
+        {/* ChatBot con Mensaje */}
         <div style={styles.chatWrapper}>
-          {/* Mensajito profesional */}
           <div style={{
             ...styles.chatHintBubble,
             ...(showChatHint ? styles.chatHintVisible : {})
           }}>
             Hola, ¿en qué puedo ayudarte? 👋
           </div>
-          
           <ChatBot />
         </div>
 
-        {/* Botón ScrollToTop */}
+        {/* Botón Subir */}
         <button
           style={{
             ...styles.scrollToTopButton,
@@ -417,12 +422,12 @@ const HomePage = () => {
           }
         }
 
-        /* --- CATEGORÍAS GRID MEJORADO --- */
+        /* --- CATEGORÍAS (GRID ARREGLADO) --- */
         .category-grid {
           display: grid;
           gap: 16px;
           width: 100%;
-          /* Mobile first: 2 columnas */
+          /* Mobile base: 2 columnas */
           grid-template-columns: repeat(2, 1fr);
         }
 
@@ -432,12 +437,13 @@ const HomePage = () => {
           height: 100%;
           display: flex;
           flex-direction: column;
-          /* Aspect ratio más equilibrado para que se vean como la foto */
+          /* Aquí está el cambio: aspect-ratio más cuadrado (1 / 1.1) */
+          /* Esto hace que se vean uniformes y no tan rectangulares */
           aspect-ratio: 1 / 1.1; 
           min-height: 0;
         }
 
-        /* Ajustes responsivos para que se vea lleno como en la imagen */
+        /* Breakpoints ajustados para llenar mejor la pantalla */
         @media (min-width: 500px) {
           .category-grid { grid-template-columns: repeat(3, 1fr); }
         }
@@ -451,10 +457,11 @@ const HomePage = () => {
           .category-grid { grid-template-columns: repeat(6, 1fr); }
         }
         @media (min-width: 1600px) {
+          /* Para pantallas muy grandes, usamos 8 columnas como en tu imagen */
           .category-grid { grid-template-columns: repeat(8, 1fr); }
         }
 
-        /* --- PRODUCTOS --- */
+        /* --- PRODUCTOS (GRID RESPONSIVE) --- */
         .product-grid {
           display: grid;
           gap: 20px;
@@ -484,7 +491,7 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- EFECTOS HOVER --- */
+        /* --- EXTRAS & HOVER EFFECTS --- */
         .force-no-border > * {
           border-color: rgba(255, 255, 255, 0.1) !important;
           transition: transform 0.3s ease, border-color 0.3s ease !important;
