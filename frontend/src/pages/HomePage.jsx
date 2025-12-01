@@ -339,6 +339,7 @@ const HomePage = () => {
               </div>
             </div>
 
+            {/* Contenedor corregido */}
             <div className="category-grid">
               {categories.map(cat => (
                 <CategoryCard category={cat} key={cat.id} />
@@ -394,7 +395,7 @@ const HomePage = () => {
         </LazySection>
       </div>
 
-      {/* ESTILOS CSS CORREGIDOS */}
+      {/* ESTILOS CSS CORREGIDOS Y OPTIMIZADOS */}
       <style>{`
         body, html {
           overflow-x: hidden !important;
@@ -412,52 +413,50 @@ const HomePage = () => {
         /* --- CATEGORÍAS CORREGIDAS --- */
         .category-grid {
           display: grid;
-          /* Aumentamos el gap para evitar superposición visual */
-          gap: 20px; 
           width: 100%;
-          
-          /* MÓVIL: 1 COLUMNA (Solución a tu pedido) */
-          grid-template-columns: repeat(1, 1fr);
+          /* MÓVIL: Empezamos con 2 columnas para que no se vea una lista infinita */
+          grid-template-columns: repeat(2, 1fr);
+          /* Gap ajustado */
+          gap: 15px; 
+          /* Importante: asegura altura automática en filas */
+          grid-auto-rows: auto;
         }
 
+        /* Aseguramos que los hijos (las cards) respeten el espacio */
         .category-grid > div, 
         .category-grid > a {
+          position: relative;
           width: 100%;
-          /* Quitamos height 100% que causaba superposición */
-          height: auto; 
+          height: auto;
+          /* Aspect Ratio cuadrado como en tu imagen */
+          aspect-ratio: 1 / 1; 
           display: flex;
           flex-direction: column;
-          /* Aspect ratio cuadrado para mantener uniformidad */
-          aspect-ratio: 1 / 1; 
-          min-height: 0;
+          overflow: hidden; /* Evita que la imagen se salga y tape a otra */
+          border-radius: 12px; /* Un toque estético acorde a la imagen */
         }
 
-        /* TABLETS PEQUEÑAS (2 columnas) */
+        /* TABLETS PEQUEÑAS (3 columnas) */
         @media (min-width: 480px) {
-          .category-grid { grid-template-columns: repeat(2, 1fr); }
+          .category-grid { grid-template-columns: repeat(3, 1fr); }
         }
         
         /* TABLETS/LAPTOPS (4 columnas) */
         @media (min-width: 768px) {
-          .category-grid { grid-template-columns: repeat(4, 1fr); }
+          .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
         }
 
-        /* DESKTOP (5 columnas) */
+        /* DESKTOP (6 columnas - similar a tu foto) */
         @media (min-width: 1024px) {
-          .category-grid { grid-template-columns: repeat(5, 1fr); }
-        }
-
-        /* PANTALLAS GRANDES (6 columnas) */
-        @media (min-width: 1280px) {
           .category-grid { grid-template-columns: repeat(6, 1fr); }
         }
         
         /* PANTALLAS EXTRA GRANDES (8 columnas) */
-        @media (min-width: 1600px) {
+        @media (min-width: 1440px) {
           .category-grid { grid-template-columns: repeat(8, 1fr); }
         }
 
-        /* --- PRODUCTOS --- */
+        /* --- PRODUCTOS (Grid estándar) --- */
         .product-grid {
           display: grid;
           gap: 20px;
@@ -487,7 +486,7 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- EXTRAS & HOVER --- */
+        /* --- HOVER EFFECTS --- */
         .force-no-border > * {
           border-color: rgba(255, 255, 255, 0.1) !important;
           transition: transform 0.3s ease, border-color 0.3s ease !important;
