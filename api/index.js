@@ -3839,6 +3839,97 @@ app.get('/api/affiliate/referrals', authenticateToken, isUser, async (req, res) 
         res.status(500).json({ error: 'Error al cargar referidos.' });
     }
 });
+
+// --- RUTA CHATBOT "INTELIGENTE" (Versión Definitiva) ---
+app.post('/api/chat', authenticateToken_Permissive, async (req, res) => {
+    const { message } = req.body;
+    const userId = req.user ? req.user.id : null;
+    
+    // Limpieza avanzada
+    const msg = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    try {
+        let responseText = "";
+
+        // --- CASO 1: ACTIVAR CUENTA (Lo que pediste específicamente) ---
+        if (msg.match(/(activar|activo|activa).*(cuenta|perfil|usuario)/) || msg.match(/(cuenta|perfil).*(no va|no funciona|caida|fallo)/)) {
+            responseText = "⚠️ **Atención:**\n\nPara activar, renovar o reportar fallos en tu cuenta, por favor **contáctate directamente con el administrador o un afiliador autorizado**.\n\nEllos te brindarán asistencia personalizada para solucionar tu caso lo más rápido posible. Puedes usar el botón de WhatsApp en el menú.";
+        }
+
+        // --- CASO 2: RECARGAS Y DINERO ---
+        else if (msg.match(/(recarga|saldo|depositar|meter dinero|billetera|yape|plin|binance|pagar)/)) {
+            responseText = "💳 **Guía de Recargas:**\n\n1. Ve a tu **Dashboard > Recargas**.\n2. Ingresa el monto en USD.\n3. Elige el método (Yape, Plin, Binance).\n4. Escanea el QR y paga.\n5. Copia el **N° de Operación** y pégalo en el formulario.\n\nUna vez confirmado, ¡el saldo se suma automáticamente!";
+        }
+
+        // --- CASO 3: SALUDOS ---
+        else if (msg.match(/^(hola|buenos|buenas|hi|hello|oe|holi|alo)$/)) {
+            responseText = "¡Hola! 👋 Bienvenido a BlackStreaming.\n\nSoy tu asistente virtual. Pregúntame sobre:\n🔸 Precios de productos\n🔸 Cómo recargar saldo\n🔸 Estado de tus pedidos\n🔸 Activar cuentas";
+        }
+
+        // --- CASO 4: PREGUNTAS FRECUENTES (FAQ) ---
+        else if (msg.includes('horario') || msg.includes('atienden')) {
+            responseText = "🕒 **Horario de Atención:**\nNuestro sistema de recargas y compras automáticas funciona **24/7**. \n\nPara soporte manual o activaciones personalizadas, atendemos de 9:00 AM a 10:00 PM.";
+        }
+        else if (msg.includes('garantia') || msg.includes('seguro')) {
+            responseText = "🛡️ **Garantía Total:**\nTodos nuestros productos tienen garantía durante el tiempo contratado. Si tienes algún problema, usa la opción 'Reportar' en tus pedidos o contacta al admin.";
+        }
+
+        // --- CASO 5: BÚSQUEDA DE PEDIDOS ---
+        else if (msg.match(/(mis pedidos|mis compras|historial|mi cuenta)/)) {
+            if (!userId) {
+                responseText = "🔒 Necesitas iniciar sesión para que pueda buscar tus pedidos.";
+            } else {
+                const query = `SELECT id, status, total_amount_usd, created_at FROM orders WHERE user_id = $1 ORDER BY created_at DESC LIMIT 3`;
+                const result = await pool.query(query, [userId]);
+                if (result.rows.length > 0) {
+                    responseText = "📂 **Tus últimos movimientos:**\n";
+                    result.rows.forEach(o => {
+                        const date = new Date(o.created_at).toLocaleDateString();
+                        const emoji = o.status === 'completado' ? '✅' : '⏳';
+                        responseText += `\n${emoji} Pedido #${o.id} (${date}) - $${o.total_amount_usd}`;
+                    });
+                } else {
+                    responseText = "No encontré compras recientes en tu cuenta.";
+                }
+            }
+        }
+
+        // --- CASO 6: BÚSQUEDA GENERAL DE PRODUCTOS ---
+        else {
+            // Eliminar palabras comunes para buscar el producto
+            let cleanSearch = msg.replace(/\b(precio|precios|costo|cuanto|vale|cuesta|busco|quisiera|tienes|vendes|de|el|la|los|las|un|una|cuenta|perfil)\b/g, "").trim();
+
+            if (cleanSearch.length >= 2) {
+                const query = `
+                    SELECT name, price_usd, offer_price_usd, stock_quantity, status 
+                    FROM products 
+                    WHERE name ILIKE $1 AND is_published = TRUE AND status != 'inactivo'
+                    LIMIT 3
+                `;
+                const result = await pool.query(query, [`%${cleanSearch}%`]);
+
+                if (result.rows.length > 0) {
+                    responseText = `🔍 **Resultados para "${cleanSearch}":**\n`;
+                    result.rows.forEach(p => {
+                        const price = p.offer_price_usd || p.price_usd;
+                        let statusTxt = p.status === 'en stock' || p.stock_quantity > 0 ? "⚡ Entrega Inmediata" : "⏳ A Pedido";
+                        responseText += `\n📺 **${p.name}**\n💰 $${price} | ${statusTxt}\n`;
+                    });
+                } else {
+                    responseText = `🤔 No encontré productos con el nombre "**${cleanSearch}**".\nIntenta escribir solo el nombre del servicio (ej: "Disney").`;
+                }
+            } else {
+                responseText = "🤖 No entendí tu consulta. Por favor intenta ser más específico o usa los botones de ayuda.";
+            }
+        }
+
+        res.json({ reply: responseText });
+
+    } catch (err) {
+        console.error('Error ChatBot:', err);
+        res.status(500).json({ reply: "Error interno. Intenta más tarde." });
+    }
+});
 // ---
 // 14. Iniciar el servidor
 // ---
