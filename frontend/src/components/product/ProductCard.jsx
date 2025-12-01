@@ -1,16 +1,16 @@
 // src/components/ProductCard.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FiShoppingCart, FiFileText, FiInfo, FiRefreshCw, FiUser, FiX, FiStar, FiAlertTriangle, FiTag
 } from 'react-icons/fi';
 
 import { useCart } from '/src/context/CartContext'; 
-import PurchaseModal from './PurchaseModal';
+// 1. IMPORTAR API CLIENT
+import apiClient from '/src/services/apiClient.js'; 
 
-// --- CONFIGURACIÓN ---
-const TIPO_DE_CAMBIO = 3.55;
+import PurchaseModal from './PurchaseModal';
 
 // --- COMPONENTE ESTRELLAS ---
 const RatingStars = ({ rating }) => {
@@ -192,6 +192,32 @@ const ProductCard = ({ product }) => {
   const [showTerms, setShowTerms] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
+  // 2. ESTADO PARA LA TASA DE CAMBIO
+  const [exchangeRate, setExchangeRate] = useState(3.55); // Valor por defecto
+
+  // 3. OBTENER TASA (Optimizado con sessionStorage)
+  useEffect(() => {
+    const fetchRate = async () => {
+        // Intenta leer de caché primero
+        const cachedRate = sessionStorage.getItem('exchangeRate');
+        if (cachedRate) {
+            setExchangeRate(parseFloat(cachedRate));
+        }
+
+        // Si no hay caché, o para actualizar en segundo plano:
+        try {
+            const res = await apiClient.get('/config/recharge');
+            if (res.data && res.data.exchange_rate) {
+                setExchangeRate(res.data.exchange_rate);
+                sessionStorage.setItem('exchangeRate', res.data.exchange_rate);
+            }
+        } catch (err) {
+            console.error("Error cargando tasa en card:", err);
+        }
+    };
+    fetchRate();
+  }, []);
+
   if (!product) return null;
 
   // --- LÓGICA DE STOCK ---
@@ -321,7 +347,8 @@ const ProductCard = ({ product }) => {
                 <div>
                   <div style={styles.priceMain}>${finalPrice}</div>
                   <div style={styles.priceSub}>
-                    S/ {(finalPrice * TIPO_DE_CAMBIO).toFixed(2)}
+                    {/* 4. AQUI SE APLICA LA TASA DINÁMICA */}
+                    S/ {(finalPrice * exchangeRate).toFixed(2)}
                   </div>
                 </div>
               </div>
