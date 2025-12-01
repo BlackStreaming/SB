@@ -212,13 +212,28 @@ const ProductPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
-  // --- TIPO DE CAMBIO FIJO ---
-  const exchangeRate = 3.55;
+  // 1. ESTADO PARA LA TASA DE CAMBIO
+  const [exchangeRate, setExchangeRate] = useState(3.55);
 
   const { addToCart } = useCart();
 
   useEffect(() => {
-    // Fetch Producto
+    // 2. FETCH TASA DE CAMBIO
+    const fetchRate = async () => {
+        const cachedRate = sessionStorage.getItem('exchangeRate');
+        if (cachedRate) setExchangeRate(parseFloat(cachedRate));
+
+        try {
+            const res = await apiClient.get('/config/recharge');
+            if (res.data?.exchange_rate) {
+                setExchangeRate(res.data.exchange_rate);
+                sessionStorage.setItem('exchangeRate', res.data.exchange_rate);
+            }
+        } catch (e) { console.error("Error cargando tasa:", e); }
+    };
+    fetchRate();
+
+    // 3. FETCH PRODUCTO
     const fetchProduct = async () => {
       if (!slug) return setError('Producto no especificado.');
       try {
@@ -234,6 +249,7 @@ const ProductPage = () => {
     fetchProduct();
   }, [slug]);
 
+  // 4. FUNCIÓN QUE USA EL ESTADO DINÁMICO
   const getConversion = (usd) => (usd * exchangeRate).toFixed(2);
 
   if (loading) {
