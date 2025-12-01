@@ -1,5 +1,3 @@
-// src/features/dashboard/ProviderDashboard/ProductManagement.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '/src/services/apiClient.js';
 import { 
@@ -33,7 +31,7 @@ const styles = {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '8px'
   },
-  
+   
   mainLayout: { display: 'flex', flexWrap: 'wrap', gap: '24px', position: 'relative', zIndex: 1 },
   columnForm: { flex: '1 1 450px', minWidth: '350px' }, 
   columnTable: { flex: '2 1 500px', minWidth: '350px' }, 
@@ -51,10 +49,10 @@ const styles = {
   gridRow3: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px' },
   inputGroup: { display: 'flex', flexDirection: 'column', width: '100%' },
   label: { fontSize: '0.8rem', fontWeight: '600', color: '#a0a0a0', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' },
-  
+   
   inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center', width: '100%' },
   inputIcon: { position: 'absolute', left: '12px', color: '#666', zIndex: 10 },
-  
+   
   input: { 
     width: '100%', padding: '10px 12px 10px 36px', border: '1px solid rgba(255, 255, 255, 0.1)', 
     borderRadius: '10px', fontSize: '0.9rem', backgroundColor: 'rgba(40, 40, 40, 0.6)', 
@@ -78,7 +76,7 @@ const styles = {
     borderRadius: '10px', fontSize: '0.9rem', backgroundColor: 'rgba(40, 40, 40, 0.6)', 
     color: '#ffffff', cursor: 'pointer', appearance: 'none', boxSizing: 'border-box'
   },
-  
+   
   tagContainer: { display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px' },
   tagLabel: { fontSize: '0.75rem', color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', transition: '0.2s' },
   tagLabelActive: { background: 'rgba(102, 126, 234, 0.2)', color: '#667eea', border: '1px solid rgba(102, 126, 234, 0.3)' },
@@ -91,7 +89,7 @@ const styles = {
   },
   buttonSecondary: { background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ccc' },
   buttonDanger: { background: 'rgba(220, 53, 69, 0.2)', border: '1px solid rgba(220, 53, 69, 0.4)', color: '#ff6b6b' },
-  
+   
   // Estilo del botón de subir imagen
   uploadBtn: {
     position: 'absolute', right: '5px', top: '5px', bottom: '5px',
@@ -109,11 +107,11 @@ const styles = {
   th: { padding: '12px 10px', backgroundColor: 'rgba(40, 40, 40, 0.95)', fontWeight: '700', color: '#a0a0a0', textAlign: 'left', fontSize: '0.75rem', textTransform: 'uppercase', whiteSpace: 'nowrap' },
   td: { padding: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e0e0e0', verticalAlign: 'middle' },
   statusBadge: { padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '700', textTransform: 'uppercase' },
-  
+   
   // Modal de Edición
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
   modalContent: { background: '#1a1a1a', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '700px', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh', overflowY: 'auto' },
-  
+   
   // Modal Feedback (Success/Error/Confirm)
   feedbackOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' },
   feedbackContent: { background: '#1f1f1f', borderRadius: '20px', padding: '40px 30px', width: '100%', maxWidth: '380px', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' },
@@ -145,7 +143,7 @@ const ProductManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [newProductForm, setNewProductForm] = useState(initialFormState);
-  
+   
   // Estado para subida de imagen
   const [uploadingImg, setUploadingImg] = useState(false);
   const fileInputRef = useRef(null);
@@ -162,8 +160,9 @@ const ProductManagement = () => {
     fetchCategories();
   }, []);
 
+  // Conversiones Seguras
   const convertPenToUsd = (pen) => pen ? (parseFloat(pen) / EXCHANGE_RATE).toFixed(2) : null;
-  const convertUsdToPen = (usd) => usd ? (parseFloat(usd) * EXCHANGE_RATE).toFixed(2) : '';
+  const convertUsdToPen = (usd) => (usd !== null && usd !== undefined) ? (parseFloat(usd) * EXCHANGE_RATE).toFixed(2) : '';
 
   const fetchProducts = async () => {
     try {
@@ -171,7 +170,7 @@ const ProductManagement = () => {
       setProducts(response.data);
     } catch (err) { setError('No se pudieron cargar los productos.'); }
   };
-  
+   
   const fetchCategories = async () => {
     try {
       const response = await apiClient.get('/provider/allowed-categories');
@@ -193,7 +192,7 @@ const ProductManagement = () => {
     }));
   };
 
-  // --- LÓGICA DE SUBIDA DE IMAGEN ---
+  // --- LÓGICA DE SUBIDA DE IMAGEN (CORREGIDA) ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -219,11 +218,13 @@ const ProductManagement = () => {
         setFeedback({ show: true, type: 'error', message: 'Error al subir la imagen. Inténtalo de nuevo.' });
     } finally {
         setUploadingImg(false);
+        // Resetear input para permitir reintentar con el mismo archivo
+        if(fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   const triggerFileInput = () => {
-    fileInputRef.current.click();
+    if(fileInputRef.current) fileInputRef.current.click();
   };
   // ----------------------------------
 
@@ -286,14 +287,12 @@ const ProductManagement = () => {
       setProducts([createdProduct, ...products]);
       setNewProductForm(initialFormState);
       
-      // REEMPLAZO DE ALERT
       setFeedback({ show: true, type: 'success', message: '¡Producto creado exitosamente!' });
 
     } catch (err) {
       const msg = err.response?.data?.error || err.message || 'Error al crear.';
       setError(msg);
       if (newProductId && !msg.includes('stock')) setError(`Creado (ID: ${newProductId}) pero falló stock.`);
-      // Opcional: Mostrar modal de error también aquí si lo prefieres sobre el mensaje inline
       setFeedback({ show: true, type: 'error', message: msg });
     } finally { setSubmitLoading(false); }
   };
@@ -311,6 +310,7 @@ const ProductManagement = () => {
       terms_conditions: product.terms_conditions || '',
       delivery_time: product.delivery_time || '',
       duration_days: product.duration_days || '',
+      has_renewal: product.has_renewal || false, // Aseguramos que sea booleano
     });
     setIsModalOpen(true);
   };
@@ -328,16 +328,14 @@ const ProductManagement = () => {
       setProducts(products.map(p => p.id === editingProduct.id ? response.data : p));
       setIsModalOpen(false);
       
-      // REEMPLAZO DE ALERT
       setFeedback({ show: true, type: 'success', message: 'Producto actualizado correctamente.' });
     } catch (err) { 
-        // REEMPLAZO DE ALERT
         setFeedback({ show: true, type: 'error', message: 'Error al actualizar el producto.' });
     }
   };
 
   // --- REEMPLAZO DE WINDOW.CONFIRM ---
-  
+   
   // 1. Abrir modal de confirmación
   const handleDeleteClick = (product) => {
       setDeleteConfirm({ show: true, id: product.id, name: product.name });
@@ -355,13 +353,11 @@ const ProductManagement = () => {
     try {
         await apiClient.delete(`/provider/products/${deleteConfirm.id}`);
         setProducts(products.filter(p => p.id !== deleteConfirm.id));
-        setDeleteConfirm({ show: false, id: null, name: '' }); // Cierra el modal de confirmación
+        setDeleteConfirm({ show: false, id: null, name: '' });
         
-        // Muestra éxito
         setFeedback({ show: true, type: 'success', message: 'Producto eliminado.' });
     } catch (err) { 
         setDeleteConfirm({ show: false, id: null, name: '' });
-        // Muestra error
         setFeedback({ show: true, type: 'error', message: 'Error al eliminar. Puede tener pedidos asociados.' });
     }
   };
@@ -498,6 +494,7 @@ const ProductManagement = () => {
                     <label style={styles.label}><FiDollarSign size={14} /> Precio</label>
                     <input type="number" step="0.01" name="price_pen" value={newProductForm.price_pen} onChange={handleNewProductChange} style={{...styles.input, paddingLeft: '12px'}} placeholder="0.00" required />
                 </div>
+                {/* Aquí corregí: Se muestra "Tachado" pero se guarda en fictitious_price_pen */}
                 <div style={styles.inputGroup}>
                     <label style={styles.label}>Tachado</label>
                     <input type="number" step="0.01" name="fictitious_price_pen" value={newProductForm.fictitious_price_pen} onChange={handleNewProductChange} style={{...styles.input, paddingLeft: '12px'}} placeholder="0.00" />
@@ -664,8 +661,9 @@ const ProductManagement = () => {
                             <label style={styles.label}>Precio</label>
                             <input type="number" step="0.01" name="price_pen" value={editingProduct.price_pen} onChange={handleEditChange} style={styles.input} />
                         </div>
+                        {/* Aquí también corregí: Se muestra "Tachado" */}
                         <div style={styles.inputGroup}>
-                            <label style={styles.label}>Ficticio</label>
+                            <label style={styles.label}>Tachado</label>
                             <input type="number" step="0.01" name="fictitious_price_pen" value={editingProduct.fictitious_price_pen} onChange={handleEditChange} style={styles.input} />
                         </div>
                         <div style={styles.inputGroup}>
@@ -721,6 +719,35 @@ const ProductManagement = () => {
                         </select>
                     </div>
 
+                    {/* SECCIÓN RENOVACIÓN EN EDITAR (AGREGADA) */}
+                    <div style={styles.inputGroup}>
+                        <label style={{...styles.label, cursor: 'pointer'}}>
+                            <input 
+                                type="checkbox" 
+                                name="has_renewal" 
+                                checked={editingProduct.has_renewal} 
+                                onChange={handleEditChange} 
+                                style={{marginRight: 8}} 
+                            />
+                            Permitir Renovación
+                        </label>
+                    </div>
+
+                    {editingProduct.has_renewal && (
+                        <div style={styles.inputGroup}>
+                            <label style={styles.label}>Precio Renovación (S/)</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                name="renewal_price_pen" 
+                                value={editingProduct.renewal_price_pen} 
+                                onChange={handleEditChange} 
+                                style={styles.input} 
+                                placeholder="0.00" 
+                            />
+                        </div>
+                    )}
+
                     {renderConditionalFields('edit')}
 
                     <div style={{display: 'flex', gap: 10, marginTop: 20}}>
@@ -755,13 +782,13 @@ const ProductManagement = () => {
                 }} 
               />
             )}
-            
+             
             <h3 style={styles.feedbackTitle}>
               {feedback.type === 'success' ? '¡Éxito!' : 'Error'}
             </h3>
-            
+             
             <p style={styles.feedbackText}>{feedback.message}</p>
-            
+             
             <button 
               onClick={handleCloseFeedback}
               style={{
@@ -791,14 +818,14 @@ const ProductManagement = () => {
                         animation: 'scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' 
                     }} 
                 />
-                
+                 
                 <h3 style={styles.feedbackTitle}>¿Estás seguro?</h3>
-                
+                 
                 <p style={styles.feedbackText}>
                     Vas a eliminar el producto <strong>"{deleteConfirm.name}"</strong>. 
                     Esta acción no se puede deshacer.
                 </p>
-                
+                 
                 <div style={{display: 'flex', gap: '10px'}}>
                     <button 
                         onClick={confirmDeleteAction}
