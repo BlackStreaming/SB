@@ -2025,11 +2025,16 @@ app.put('/api/admin/config/settings', authenticateToken, isAdmin, async (req, re
 });
 
 // 3. ADMIN: Crear Nuevo Método de Pago (Con Imagen)
+// 3. ADMIN: Crear Nuevo Método de Pago (CORREGIDO PARA CLOUDINARY)
 app.post('/api/admin/payment-methods', authenticateToken, isAdmin, upload.single('image'), async (req, res) => {
     const { name, account_name, currency } = req.body;
     
     if (!req.file) return res.status(400).json({ error: 'La imagen del QR es obligatoria.' });
-    const image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    
+    // --- CAMBIO AQUÍ ---
+    // ANTES (Local): const image_url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // AHORA (Cloudinary): La URL ya viene lista en req.file.path
+    const image_url = req.file.path; 
 
     try {
         const query = `
@@ -3809,3 +3814,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+
