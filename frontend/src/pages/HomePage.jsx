@@ -5,7 +5,6 @@ import ProductCard from '/src/components/product/ProductCard.jsx';
 import Carousel from '/src/components/ui/Carousel.jsx';
 import CategoryCard from '/src/components/ui/CategoryCard.jsx';
 import PaymentMethods from '/src/components/layout/PaymentMethods.jsx';
-// Importamos el ChatBot que faltaba
 import ChatBot from '/src/components/ui/ChatBot.jsx'; 
 import { 
   FiTrendingUp, FiStar, FiGrid, FiRefreshCw, FiAlertTriangle, 
@@ -28,7 +27,7 @@ const styles = {
     marginBottom: '30px',
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
     display: 'flex',
-    minHeight: '220px', // Altura reservada en móvil
+    minHeight: '220px', 
   },
   content: {
     maxWidth: '1600px',
@@ -105,21 +104,21 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   },
-  // --- ACTUALIZADO: Estilos para botones flotantes y Chat ---
+  // --- Botones Flotantes y Chat ---
   floatingButtons: {
     position: 'fixed',
     right: '20px',
     bottom: '20px',
     zIndex: 999,
     display: 'flex',
-    flexDirection: 'column', // Apilar verticalmente
-    alignItems: 'flex-end',    // Alinear a la derecha
+    flexDirection: 'column',
+    alignItems: 'flex-end',
     gap: '15px',
-    pointerEvents: 'none'      // Deja pasar clicks en el área vacía
+    pointerEvents: 'none'
   },
   chatWrapper: {
     position: 'relative',
-    pointerEvents: 'auto',     // Reactiva clicks para el chat
+    pointerEvents: 'auto',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-end'
@@ -159,7 +158,7 @@ const styles = {
     opacity: 0,
     transform: 'translateY(20px)',
     transition: 'all 0.3s ease',
-    pointerEvents: 'auto' // Reactiva clicks para el botón
+    pointerEvents: 'auto' 
   },
   scrollToTopButtonVisible: {
     opacity: 1,
@@ -167,9 +166,6 @@ const styles = {
   },
 };
 
-/**
- * Sección perezosa: solo monta el contenido cuando entra al viewport.
- */
 const LazySection = ({ children, rootMargin = '200px 0px' }) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -209,13 +205,10 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
-  // Estado para mostrar el mensajito del chat
   const [showChatHint, setShowChatHint] = useState(false);
 
-  // Scroll más suave usando requestAnimationFrame
   useEffect(() => {
     let ticking = false;
-
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
@@ -225,15 +218,10 @@ const HomePage = () => {
         ticking = true;
       }
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Efecto para mostrar el mensaje "Hola..." después de 3 segundos
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowChatHint(true);
@@ -312,10 +300,9 @@ const HomePage = () => {
         <Carousel />
       </div>
 
-      {/* --- BOTONES FLOTANTES: ChatBot + Subir --- */}
+      {/* --- BOTONES FLOTANTES --- */}
       <div style={styles.floatingButtons}>
-        
-        {/* ChatBot con Mensaje */}
+        {/* ChatBot */}
         <div style={styles.chatWrapper}>
           <div style={{
             ...styles.chatHintBubble,
@@ -407,7 +394,7 @@ const HomePage = () => {
         </LazySection>
       </div>
 
-      {/* ESTILOS GLOBALES Y RESPONSIVE OPTIMIZADOS */}
+      {/* ESTILOS CSS CORREGIDOS */}
       <style>{`
         body, html {
           overflow-x: hidden !important;
@@ -415,53 +402,62 @@ const HomePage = () => {
           background-color: #0c0c0c;
         }
 
-        /* --- FIX RESPONSIVE HEIGHT (CLS) --- */
+        /* --- FIX RESPONSIVE HEIGHT --- */
         @media (min-width: 768px) {
           .carousel-responsive-height {
             min-height: 480px !important;
           }
         }
 
-        /* --- CATEGORÍAS (GRID ARREGLADO) --- */
+        /* --- CATEGORÍAS CORREGIDAS --- */
         .category-grid {
           display: grid;
-          gap: 16px;
+          /* Aumentamos el gap para evitar superposición visual */
+          gap: 20px; 
           width: 100%;
-          /* Mobile base: 2 columnas */
-          grid-template-columns: repeat(2, 1fr);
+          
+          /* MÓVIL: 1 COLUMNA (Solución a tu pedido) */
+          grid-template-columns: repeat(1, 1fr);
         }
 
         .category-grid > div, 
         .category-grid > a {
           width: 100%;
-          height: 100%;
+          /* Quitamos height 100% que causaba superposición */
+          height: auto; 
           display: flex;
           flex-direction: column;
-          /* Aquí está el cambio: aspect-ratio más cuadrado (1 / 1.1) */
-          /* Esto hace que se vean uniformes y no tan rectangulares */
-          aspect-ratio: 1 / 1.1; 
+          /* Aspect ratio cuadrado para mantener uniformidad */
+          aspect-ratio: 1 / 1; 
           min-height: 0;
         }
 
-        /* Breakpoints ajustados para llenar mejor la pantalla */
-        @media (min-width: 500px) {
-          .category-grid { grid-template-columns: repeat(3, 1fr); }
+        /* TABLETS PEQUEÑAS (2 columnas) */
+        @media (min-width: 480px) {
+          .category-grid { grid-template-columns: repeat(2, 1fr); }
         }
+        
+        /* TABLETS/LAPTOPS (4 columnas) */
         @media (min-width: 768px) {
           .category-grid { grid-template-columns: repeat(4, 1fr); }
         }
+
+        /* DESKTOP (5 columnas) */
         @media (min-width: 1024px) {
           .category-grid { grid-template-columns: repeat(5, 1fr); }
         }
+
+        /* PANTALLAS GRANDES (6 columnas) */
         @media (min-width: 1280px) {
           .category-grid { grid-template-columns: repeat(6, 1fr); }
         }
+        
+        /* PANTALLAS EXTRA GRANDES (8 columnas) */
         @media (min-width: 1600px) {
-          /* Para pantallas muy grandes, usamos 8 columnas como en tu imagen */
           .category-grid { grid-template-columns: repeat(8, 1fr); }
         }
 
-        /* --- PRODUCTOS (GRID RESPONSIVE) --- */
+        /* --- PRODUCTOS --- */
         .product-grid {
           display: grid;
           gap: 20px;
@@ -491,7 +487,7 @@ const HomePage = () => {
           .product-grid { grid-template-columns: repeat(6, 1fr); }
         }
 
-        /* --- EXTRAS & HOVER EFFECTS --- */
+        /* --- EXTRAS & HOVER --- */
         .force-no-border > * {
           border-color: rgba(255, 255, 255, 0.1) !important;
           transition: transform 0.3s ease, border-color 0.3s ease !important;
