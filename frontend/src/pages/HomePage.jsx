@@ -11,12 +11,13 @@ import {
   FiArrowUp
 } from 'react-icons/fi';
 
-// --- ESTILOS ESTÁTICOS (Fuera del componente para evitar re-renderizados) ---
+// --- ESTILOS ESTÁTICOS (Fuera del componente para evitar recreación) ---
 const styles = {
   container: {
     minHeight: '100vh',
     backgroundColor: '#0c0c0c',
-    backgroundImage: 'radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0c0c0c 70%)',
+    // Simplificado el gradiente para mejorar rendimiento en scroll
+    backgroundImage: 'linear-gradient(to bottom, #1a1a1a 0%, #0c0c0c 100%)',
     fontFamily: "'Inter', sans-serif",
     color: '#e0e0e0',
     position: 'relative',
@@ -26,10 +27,10 @@ const styles = {
     width: '100%',
     position: 'relative',
     marginBottom: '30px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+    // Sombra simplificada
+    boxShadow: '0 5px 15px rgba(0,0,0,0.3)', 
     display: 'flex',
     minHeight: '220px', 
-    contentVisibility: 'auto', // Optimización moderna
   },
   content: {
     maxWidth: '1600px',
@@ -40,8 +41,6 @@ const styles = {
   },
   section: {
     marginBottom: '50px',
-    contentVisibility: 'auto', // Ayuda al navegador a no renderizar lo que no se ve
-    containIntrinsicSize: '500px', // Evita saltos de layout
   },
   sectionHeader: {
     display: 'flex',
@@ -80,7 +79,7 @@ const styles = {
     border: '3px solid rgba(255, 255, 255, 0.1)',
     borderTop: '3px solid #667eea',
     borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite'
+    animation: 'spin 1s linear infinite' // Única animación mantenida (necesaria para feedback)
   },
   errorContainer: {
     display: 'flex',
@@ -134,22 +133,19 @@ const styles = {
     borderRadius: '12px 12px 0 12px',
     fontSize: '0.9rem',
     fontWeight: '600',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-    opacity: 0,
-    transform: 'translateY(10px) scale(0.95)',
-    transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
     whiteSpace: 'nowrap',
-    position: 'relative'
+    position: 'relative',
+    display: 'none' // Oculto por defecto para rendimiento
   },
   chatHintVisible: {
-    opacity: 1,
-    transform: 'translateY(0) scale(1)'
+    display: 'block' // Cambio simple de display en lugar de opacidad/transform
   },
   scrollToTopButton: {
     width: '45px',
     height: '45px',
     borderRadius: '50%',
-    display: 'flex',
+    display: 'none', // Oculto por defecto
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
@@ -157,29 +153,21 @@ const styles = {
     fontSize: '20px',
     color: 'white',
     background: '#667eea',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-    opacity: 0,
-    transform: 'translateY(20px)',
-    transition: 'all 0.3s ease',
-    pointerEvents: 'auto',
-    willChange: 'opacity, transform' // Optimización GPU
+    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
+    pointerEvents: 'auto' 
   },
   scrollToTopButtonVisible: {
-    opacity: 1,
-    transform: 'translateY(0)'
+    display: 'flex' // Mostrar sin animación
   },
 };
 
-// --- CSS GLOBAL CONSTANTE ---
-const GLOBAL_CSS = `
+// --- CSS STRING (Sin transiciones ni hovers pesados) ---
+const globalCss = `
   body, html {
     overflow-x: hidden !important;
     width: 100%;
     background-color: #0c0c0c;
-    scroll-behavior: smooth;
   }
-
-  /* Animación Loading */
   @keyframes spin { 
     0% { transform: rotate(0deg); } 
     100% { transform: rotate(360deg); } 
@@ -192,12 +180,11 @@ const GLOBAL_CSS = `
     }
   }
 
-  /* --- CATEGORÍAS (Optimizado) --- */
+  /* CATEGORÍAS */
   .category-grid {
     display: grid;
     width: 100%;
-    /* MÓVIL: 1 Columna (Solicitud del usuario) */
-    grid-template-columns: 1fr; 
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px; 
     grid-auto-rows: auto;
   }
@@ -211,33 +198,13 @@ const GLOBAL_CSS = `
     flex-direction: column;
   }
 
-  /* BREAKPOINTS RESPONSIVE */
-  /* Móvil grande (480px) -> 2 columnas */
-  @media (min-width: 480px) {
-    .category-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  
-  /* Tablets (768px) -> 3 columnas */
-  @media (min-width: 768px) {
-    .category-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  }
+  @media (min-width: 500px) { .category-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 768px) { .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+  @media (min-width: 1024px) { .category-grid { grid-template-columns: repeat(5, 1fr); } }
+  @media (min-width: 1280px) { .category-grid { grid-template-columns: repeat(6, 1fr); } }
+  @media (min-width: 1600px) { .category-grid { grid-template-columns: repeat(8, 1fr); } }
 
-  /* Desktop (1024px) -> 4 columnas */
-  @media (min-width: 1024px) {
-    .category-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-  
-  /* Large (1280px) -> 5 columnas */
-  @media (min-width: 1280px) {
-    .category-grid { grid-template-columns: repeat(5, 1fr); }
-  }
-  
-  /* Extra Large (1600px) -> 6 columnas */
-  @media (min-width: 1600px) {
-    .category-grid { grid-template-columns: repeat(6, 1fr); }
-  }
-
-  /* --- PRODUCTOS --- */
+  /* PRODUCTOS */
   .product-grid {
     display: grid;
     gap: 20px;
@@ -251,29 +218,21 @@ const GLOBAL_CSS = `
     height: 100%;
   }
 
-  @media (min-width: 500px) {
-    .product-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (min-width: 850px) {
-    .product-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (min-width: 1100px) {
-    .product-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-  @media (min-width: 1500px) {
-    .product-grid { grid-template-columns: repeat(5, 1fr); }
-  }
+  @media (min-width: 480px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1400px) { .product-grid { grid-template-columns: repeat(5, 1fr); } }
 
-  /* --- ANIMACIONES HOVER (Optimizadas) --- */
+  /* ESTILOS DE TARJETAS SIN ANIMACIONES */
   .force-no-border > * {
     border-color: rgba(255, 255, 255, 0.1) !important;
-    transition: transform 0.2s ease, border-color 0.2s ease !important;
-    will-change: transform; /* Optimización GPU */
   }
-
-  .force-no-border > *:hover {
-    border-color: rgba(255, 255, 255, 0.3) !important;
-    transform: translateY(-4px);
+  
+  /* Hover simple solo cambio de color de borde, sin movimiento */
+  .force-no-border > *:hover,
+  .force-no-border > a:hover,
+  .force-no-border > div:hover {
+    border-color: #667eea !important;
   }
 
   @media (max-width: 600px) {
@@ -281,8 +240,7 @@ const GLOBAL_CSS = `
   }
 `;
 
-// Componente LazySection (Memoizado para evitar renderizados innecesarios)
-const LazySection = React.memo(({ children, rootMargin = '200px 0px' }) => {
+const LazySection = ({ children, rootMargin = '200px 0px' }) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -300,7 +258,7 @@ const LazySection = React.memo(({ children, rootMargin = '200px 0px' }) => {
           observer.disconnect();
         }
       },
-      { root: null, rootMargin, threshold: 0.01 } // Threshold bajo para respuesta rápida
+      { root: null, rootMargin, threshold: 0 } // Threshold 0 para carga más rápida
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -309,11 +267,11 @@ const LazySection = React.memo(({ children, rootMargin = '200px 0px' }) => {
   }, [rootMargin]);
 
   return (
-    <div ref={ref} style={{ minHeight: '100px' }}>
-      {isVisible ? children : null}
+    <div ref={ref}>
+      {isVisible ? children : <div style={{ height: '100px' }} />}
     </div>
   );
-});
+};
 
 const HomePage = () => {
   const [categories, setCategories] = useState([]);
@@ -323,38 +281,45 @@ const HomePage = () => {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [showChatHint, setShowChatHint] = useState(false);
 
-  // Optimización de scroll usando requestAnimationFrame
+  // Optimización Scroll: UseCallback y chequeo de estado previo
+  const handleScroll = useCallback(() => {
+    const shouldShow = window.scrollY > 400;
+    setShowScrollToTop(prev => {
+      // Solo actualiza el estado si es diferente para evitar re-renders
+      if (prev !== shouldShow) return shouldShow;
+      return prev;
+    });
+  }, []);
+
   useEffect(() => {
+    // Throttle básico usando requestAnimationFrame es buena práctica
     let ticking = false;
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
+    const onScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Solo actualizamos el estado si es necesario para evitar re-renders masivos
-          if (currentScroll > 400 && !showScrollToTop) {
-            setShowScrollToTop(true);
-          } else if (currentScroll <= 400 && showScrollToTop) {
-            setShowScrollToTop(false);
-          }
+          handleScroll();
           ticking = false;
         });
         ticking = true;
       }
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [showScrollToTop]); // Dependencia necesaria para comparar el estado actual
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [handleScroll]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowChatHint(true), 3000);
+    const timer = setTimeout(() => {
+      setShowChatHint(true);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
-  const fetchHomeData = useCallback(async () => {
+  const fetchHomeData = async () => {
     try {
       setLoading(true);
       setError(null);
+      // Ejecución paralela es correcta
       const [categoriesResponse, productsResponse] = await Promise.all([
         apiClient.get('/categories'),
         apiClient.get('/products')
@@ -367,40 +332,38 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchHomeData();
-  }, [fetchHomeData]);
+  }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Behavior 'auto' es instantáneo y consume menos recursos que 'smooth'
+    window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
-  // Memoizar listas de productos
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]);
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
-  // Render condicional para Loading
   if (loading) {
     return (
       <div style={styles.container}>
+        <style>{globalCss}</style>
         <div style={styles.content}>
           <div style={styles.loadingContainer}>
             <div style={styles.loadingSpinner} />
             <p style={{ color: '#888' }}>Cargando...</p>
           </div>
-          {/* Estilo mínimo para el spinner */}
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
-  // Render condicional para Error
   if (error) {
     return (
       <div style={styles.container}>
+        <style>{globalCss}</style>
         <div style={styles.content}>
           <div style={styles.errorContainer}>
             <FiAlertTriangle size={40} color="#ff6b6b" />
@@ -416,8 +379,8 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Inyección de CSS Global una sola vez */}
-      <style>{GLOBAL_CSS}</style>
+      {/* Inyectar CSS global una sola vez */}
+      <style>{globalCss}</style>
 
       {/* Carrusel */}
       <div style={styles.carouselContainer} className="carousel-responsive-height">
@@ -426,6 +389,7 @@ const HomePage = () => {
 
       {/* --- BOTONES FLOTANTES --- */}
       <div style={styles.floatingButtons}>
+        {/* ChatBot */}
         <div style={styles.chatWrapper}>
           <div style={{
             ...styles.chatHintBubble,
@@ -436,6 +400,7 @@ const HomePage = () => {
           <ChatBot />
         </div>
 
+        {/* Botón Subir */}
         <button
           style={{
             ...styles.scrollToTopButton,
@@ -509,7 +474,7 @@ const HomePage = () => {
         </LazySection>
 
         {/* MÉTODOS DE PAGO */}
-        <LazySection rootMargin="0px 0px 200px 0px">
+        <LazySection rootMargin="0px 0px 100px 0px">
           <section style={styles.section}>
             <PaymentMethods />
           </section>
@@ -519,4 +484,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default React.memo(HomePage);
