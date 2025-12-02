@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '/src/services/apiClient.js';
 import ProductCard from '/src/components/product/ProductCard.jsx';
@@ -11,6 +11,7 @@ import {
   FiArrowUp
 } from 'react-icons/fi';
 
+// --- ESTILOS ESTÁTICOS (Fuera del componente para evitar re-renderizados) ---
 const styles = {
   container: {
     minHeight: '100vh',
@@ -28,6 +29,7 @@ const styles = {
     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
     display: 'flex',
     minHeight: '220px', 
+    contentVisibility: 'auto', // Optimización moderna
   },
   content: {
     maxWidth: '1600px',
@@ -38,6 +40,8 @@ const styles = {
   },
   section: {
     marginBottom: '50px',
+    contentVisibility: 'auto', // Ayuda al navegador a no renderizar lo que no se ve
+    containIntrinsicSize: '500px', // Evita saltos de layout
   },
   sectionHeader: {
     display: 'flex',
@@ -104,7 +108,6 @@ const styles = {
     alignItems: 'center',
     gap: '8px'
   },
-  // --- Botones Flotantes y Chat ---
   floatingButtons: {
     position: 'fixed',
     right: '20px',
@@ -158,7 +161,8 @@ const styles = {
     opacity: 0,
     transform: 'translateY(20px)',
     transition: 'all 0.3s ease',
-    pointerEvents: 'auto' 
+    pointerEvents: 'auto',
+    willChange: 'opacity, transform' // Optimización GPU
   },
   scrollToTopButtonVisible: {
     opacity: 1,
@@ -166,7 +170,119 @@ const styles = {
   },
 };
 
-const LazySection = ({ children, rootMargin = '200px 0px' }) => {
+// --- CSS GLOBAL CONSTANTE ---
+const GLOBAL_CSS = `
+  body, html {
+    overflow-x: hidden !important;
+    width: 100%;
+    background-color: #0c0c0c;
+    scroll-behavior: smooth;
+  }
+
+  /* Animación Loading */
+  @keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+  }
+
+  /* FIX CARRUSEL RESPONSIVE */
+  @media (min-width: 768px) {
+    .carousel-responsive-height {
+      min-height: 480px !important;
+    }
+  }
+
+  /* --- CATEGORÍAS (Optimizado) --- */
+  .category-grid {
+    display: grid;
+    width: 100%;
+    /* MÓVIL: 1 Columna (Solicitud del usuario) */
+    grid-template-columns: 1fr; 
+    gap: 15px; 
+    grid-auto-rows: auto;
+  }
+
+  .category-grid > div, 
+  .category-grid > a {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* BREAKPOINTS RESPONSIVE */
+  /* Móvil grande (480px) -> 2 columnas */
+  @media (min-width: 480px) {
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  
+  /* Tablets (768px) -> 3 columnas */
+  @media (min-width: 768px) {
+    .category-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  }
+
+  /* Desktop (1024px) -> 4 columnas */
+  @media (min-width: 1024px) {
+    .category-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  
+  /* Large (1280px) -> 5 columnas */
+  @media (min-width: 1280px) {
+    .category-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+  
+  /* Extra Large (1600px) -> 6 columnas */
+  @media (min-width: 1600px) {
+    .category-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  /* --- PRODUCTOS --- */
+  .product-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(1, 1fr);
+    justify-items: stretch;
+  }
+  
+  .product-grid > div, 
+  .product-grid > a {
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (min-width: 500px) {
+    .product-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 850px) {
+    .product-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 1100px) {
+    .product-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (min-width: 1500px) {
+    .product-grid { grid-template-columns: repeat(5, 1fr); }
+  }
+
+  /* --- ANIMACIONES HOVER (Optimizadas) --- */
+  .force-no-border > * {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease !important;
+    will-change: transform; /* Optimización GPU */
+  }
+
+  .force-no-border > *:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-4px);
+  }
+
+  @media (max-width: 600px) {
+    div[style*="sectionTitle"] { font-size: 1.3rem !important; }
+  }
+`;
+
+// Componente LazySection (Memoizado para evitar renderizados innecesarios)
+const LazySection = React.memo(({ children, rootMargin = '200px 0px' }) => {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -184,7 +300,7 @@ const LazySection = ({ children, rootMargin = '200px 0px' }) => {
           observer.disconnect();
         }
       },
-      { root: null, rootMargin, threshold: 0.1 }
+      { root: null, rootMargin, threshold: 0.01 } // Threshold bajo para respuesta rápida
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -193,11 +309,11 @@ const LazySection = ({ children, rootMargin = '200px 0px' }) => {
   }, [rootMargin]);
 
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ minHeight: '100px' }}>
       {isVisible ? children : null}
     </div>
   );
-};
+});
 
 const HomePage = () => {
   const [categories, setCategories] = useState([]);
@@ -207,29 +323,35 @@ const HomePage = () => {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [showChatHint, setShowChatHint] = useState(false);
 
+  // Optimización de scroll usando requestAnimationFrame
   useEffect(() => {
     let ticking = false;
     const handleScroll = () => {
+      const currentScroll = window.scrollY;
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setShowScrollToTop(window.scrollY > 400);
+          // Solo actualizamos el estado si es necesario para evitar re-renders masivos
+          if (currentScroll > 400 && !showScrollToTop) {
+            setShowScrollToTop(true);
+          } else if (currentScroll <= 400 && showScrollToTop) {
+            setShowScrollToTop(false);
+          }
           ticking = false;
         });
         ticking = true;
       }
     };
+    
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [showScrollToTop]); // Dependencia necesaria para comparar el estado actual
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowChatHint(true);
-    }, 3000);
+    const timer = setTimeout(() => setShowChatHint(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 
-  const fetchHomeData = async () => {
+  const fetchHomeData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -245,19 +367,21 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchHomeData();
-  }, []);
+  }, [fetchHomeData]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Memoizar listas de productos
   const featuredProducts = useMemo(() => products.slice(0, 12), [products]);
   const trendingProducts = useMemo(() => products.slice(0, 6), [products]);
 
+  // Render condicional para Loading
   if (loading) {
     return (
       <div style={styles.container}>
@@ -266,17 +390,14 @@ const HomePage = () => {
             <div style={styles.loadingSpinner} />
             <p style={{ color: '#888' }}>Cargando...</p>
           </div>
-          <style>{`
-            @keyframes spin { 
-              0% { transform: rotate(0deg); } 
-              100% { transform: rotate(360deg); } 
-            }
-          `}</style>
+          {/* Estilo mínimo para el spinner */}
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
+  // Render condicional para Error
   if (error) {
     return (
       <div style={styles.container}>
@@ -295,6 +416,9 @@ const HomePage = () => {
 
   return (
     <div style={styles.container}>
+      {/* Inyección de CSS Global una sola vez */}
+      <style>{GLOBAL_CSS}</style>
+
       {/* Carrusel */}
       <div style={styles.carouselContainer} className="carousel-responsive-height">
         <Carousel />
@@ -302,7 +426,6 @@ const HomePage = () => {
 
       {/* --- BOTONES FLOTANTES --- */}
       <div style={styles.floatingButtons}>
-        {/* ChatBot */}
         <div style={styles.chatWrapper}>
           <div style={{
             ...styles.chatHintBubble,
@@ -313,7 +436,6 @@ const HomePage = () => {
           <ChatBot />
         </div>
 
-        {/* Botón Subir */}
         <button
           style={{
             ...styles.scrollToTopButton,
@@ -339,7 +461,6 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Contenedor Categorías */}
             <div className="category-grid">
               {categories.map(cat => (
                 <CategoryCard category={cat} key={cat.id} />
@@ -394,116 +515,6 @@ const HomePage = () => {
           </section>
         </LazySection>
       </div>
-
-      {/* ESTILOS CSS CORREGIDOS */}
-      <style>{`
-        body, html {
-          overflow-x: hidden !important;
-          width: 100%;
-          background-color: #0c0c0c;
-        }
-
-        /* --- FIX CARRUSEL RESPONSIVE --- */
-        @media (min-width: 768px) {
-          .carousel-responsive-height {
-            min-height: 480px !important;
-          }
-        }
-
-        /* --- CATEGORÍAS (Solución Final) --- */
-        .category-grid {
-          display: grid;
-          width: 100%;
-          /* MÓVIL: 2 columnas para que no sea una lista larga */
-          grid-template-columns: repeat(2, 1fr);
-          gap: 15px; 
-          /* CRUCIAL: 'auto' permite que el texto crezca hacia abajo sin cortarse */
-          grid-auto-rows: auto;
-        }
-
-        /* Estilo para los hijos (las tarjetas) */
-        .category-grid > div, 
-        .category-grid > a {
-          width: 100%;
-          height: auto;
-          min-height: 100%;
-          display: flex;
-          flex-direction: column;
-          /* Quitamos el overflow hidden estricto para que el texto se vea */
-          /* Quitamos aspect-ratio forzado en el contenedor padre */
-        }
-
-        /* BREAKPOINTS RESPONSIVE */
-        
-        /* Tablets (3 columnas) */
-        @media (min-width: 500px) {
-          .category-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-        
-        /* Tablets grandes / Laptops pequeñas (4 columnas) */
-        @media (min-width: 768px) {
-          .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-        }
-
-        /* Desktop Estándar (5 columnas) */
-        @media (min-width: 1024px) {
-          .category-grid { grid-template-columns: repeat(5, 1fr); }
-        }
-        
-        /* Pantallas Grandes (6 columnas - como tu foto) */
-        @media (min-width: 1280px) {
-          .category-grid { grid-template-columns: repeat(6, 1fr); }
-        }
-        
-        /* Extra Grandes (8 columnas) */
-        @media (min-width: 1600px) {
-          .category-grid { grid-template-columns: repeat(8, 1fr); }
-        }
-
-        /* --- PRODUCTOS --- */
-        .product-grid {
-          display: grid;
-          gap: 20px;
-          grid-template-columns: repeat(1, 1fr);
-          justify-items: stretch;
-        }
-        
-        .product-grid > div, 
-        .product-grid > a {
-          width: 100%;
-          height: 100%;
-        }
-
-        @media (min-width: 480px) {
-          .product-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (min-width: 768px) {
-          .product-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (min-width: 1024px) {
-          .product-grid { grid-template-columns: repeat(4, 1fr); }
-        }
-        @media (min-width: 1400px) {
-          .product-grid { grid-template-columns: repeat(5, 1fr); }
-        }
-
-        /* --- ANIMACIONES HOVER --- */
-        .force-no-border > * {
-          border-color: rgba(255, 255, 255, 0.1) !important;
-          transition: transform 0.3s ease, border-color 0.3s ease !important;
-        }
-
-        .force-no-border > *:hover,
-        .force-no-border > a:hover,
-        .force-no-border > div:hover {
-          border-color: rgba(255, 255, 255, 0.3) !important;
-          transform: translateY(-5px);
-        }
-
-        @media (max-width: 600px) {
-          div[style*="sectionTitle"] { font-size: 1.3rem !important; }
-        }
-      `}</style>
     </div>
   );
 };
