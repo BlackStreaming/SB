@@ -7,7 +7,6 @@ import {
 } from 'react-icons/fi';
 
 import { useCart } from '/src/context/CartContext'; 
-// 1. IMPORTAR API CLIENT
 import apiClient from '/src/services/apiClient.js'; 
 
 import PurchaseModal from './PurchaseModal';
@@ -31,19 +30,30 @@ const RatingStars = ({ rating }) => {
   );
 };
 
-// --- ESTILOS ---
+// --- ESTILOS OPTIMIZADOS ---
 const styles = {
   cardWrapper: {
     textDecoration: 'none', color: 'inherit', display: 'block', height: '100%', position: 'relative',
   },
   card: {
     backgroundColor: '#111', borderRadius: '16px', border: '1px solid #2a2a2a', 
-    display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative',
-    height: '100%', minHeight: '480px', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+    display: 'flex', flexDirection: 'column', overflow: 'hidden', 
+    position: 'relative',
+    height: '100%', minHeight: '480px', 
+    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
     boxShadow: '0 4px 15px rgba(0,0,0,0.4)', fontFamily: "'Inter', 'Roboto', sans-serif",
+    
+    // --- FIX: ESTAS PROPIEDADES EVITAN EL TEMBLOR AL SCROLLEAR ---
+    transform: 'translateZ(0)',       // Fuerza aceleración por hardware (GPU)
+    backfaceVisibility: 'hidden',     // Evita parpadeos en renderizado
+    willChange: 'transform',          // Optimiza la preparación de la animación
+    zIndex: 1,                        // Establece contexto de apilamiento firme
   },
   cardHover: {
-    transform: 'translateY(-6px)', borderColor: '#444', boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+    // Usamos translate3d para asegurar que el movimiento siga en la GPU
+    transform: 'translate3d(0, -6px, 0)', 
+    borderColor: '#444', 
+    boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
   },
 
   // CINTA (RIBBON)
@@ -303,8 +313,8 @@ const ProductCard = ({ product }) => {
               src={product.image_url || 'https://via.placeholder.com/300?text=Digital'} 
               alt={product.name} 
               style={{...styles.image, transform: hover ? 'scale(1.08)' : 'scale(1)'}}
-              loading="lazy"          // <- LAZY LOADING
-              decoding="async"        // <- sugerencia extra
+              loading="lazy"
+              decoding="async"
               referrerPolicy="no-referrer"
             />
             
