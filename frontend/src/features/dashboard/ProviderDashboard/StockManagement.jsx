@@ -1,11 +1,11 @@
 // src/features/dashboard/ProviderDashboard/StockManagement.jsx
 
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../../services/apiClient.js'; // Asegura que la ruta sea correcta
+import apiClient from '../../../services/apiClient.js';
 import { 
   FiBox, FiPlus, FiEdit2, FiTrash2, FiSave, FiAlertCircle, 
   FiCheckCircle, FiGrid, FiList, FiTerminal, FiUser, FiLock, FiHash,
-  FiMail, FiSettings, FiX
+  FiMail, FiSettings, FiX, FiRefreshCw, FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
 
 // --- Estilos Unified Compact Theme ---
@@ -39,7 +39,13 @@ const styles = {
   message: { padding: '12px', borderRadius: '10px', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' },
   success: { background: 'rgba(39, 174, 96, 0.15)', color: '#2ecc71', border: '1px solid rgba(39, 174, 96, 0.3)' },
   error: { background: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b', border: '1px solid rgba(220, 53, 69, 0.3)' },
-  gridInputs: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }
+  gridInputs: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' },
+  
+  // --- Estilos de Paginación ---
+  paginationContainer: { display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px', gap: '12px' },
+  pageButton: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#e0e0e0', width: '36px', height: '36px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s' },
+  pageButtonDisabled: { opacity: 0.5, cursor: 'not-allowed' },
+  pageInfo: { fontSize: '0.9rem', color: '#a0a0a0', fontWeight: '600' }
 };
 
 const StockManagement = () => {
@@ -57,6 +63,10 @@ const StockManagement = () => {
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+
+  // --- Estado de Paginación ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchProductsList = async () => {
@@ -78,6 +88,7 @@ const StockManagement = () => {
       if (['en stock', 'agotado', 'activacion'].includes(statusResponse.data.status)) {
         const stockResponse = await apiClient.get(`/provider/stock-items/${productId}`);
         setStockItems(stockResponse.data);
+        setCurrentPage(1); // Resetear paginación al cargar nuevos datos
       } else { setStockItems([]); }
     } catch (err) { setError('Error al cargar datos.'); } finally { setLoading(false); }
   };
@@ -86,6 +97,12 @@ const StockManagement = () => {
     const id = e.target.value;
     setSelectedProductId(id);
     fetchProductData(id);
+  };
+
+  const handleRefreshStock = () => {
+    if(selectedProductId) {
+        fetchProductData(selectedProductId);
+    }
   };
 
   const handleSaveStatus = async (newStatus) => {
@@ -142,16 +159,15 @@ const StockManagement = () => {
     } catch (err) { setError('Error al añadir stock.'); } finally { setLoading(false); }
   };
 
-  // --- LÓGICA DE ELIMINAR CORREGIDA ---
   const handleDeleteStockItem = async (id) => {
-    if (!id) return alert("Error: ID del item no encontrado."); // Validación extra
+    if (!id) return;
     if (!window.confirm('¿Eliminar este item definitivamente?')) return;
     
     try {
       setLoading(true);
       await apiClient.delete(`/provider/stock-items/${id}`);
       setSuccess('Item eliminado del inventario.');
-      fetchProductData(selectedProductId); // Refrescar tabla
+      fetchProductData(selectedProductId);
     } catch (err) { 
         console.error(err);
         setError('Error al eliminar el item. Verifica el backend.'); 
@@ -160,7 +176,6 @@ const StockManagement = () => {
     }
   };
 
-  // --- LÓGICA DE EDITAR CORREGIDA ---
   const handleEditItemSubmit = async (e) => {
     e.preventDefault();
     if (!editingItem || !editingItem.id) return;
@@ -177,6 +192,20 @@ const StockManagement = () => {
     } finally {
         setLoading(false);
     }
+  };
+
+  // --- Lógica de Paginación ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = stockItems.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(stockItems.length / itemsPerPage);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const salesType = currentProduct ? (['a pedido', 'activacion'].includes(currentProduct.status) ? currentProduct.status : 'stock') : 'agotado';
@@ -265,12 +294,22 @@ const StockManagement = () => {
 
                 {/* Tabla de Stock */}
                 <div style={{marginTop: 32}}>
-                  <h4 style={{color:'#fff'}}>Inventario ({stockItems.length})</h4>
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16}}>
+                    <h4 style={{color:'#fff', margin: 0}}>Inventario ({stockItems.length})</h4>
+                    <button 
+                        onClick={handleRefreshStock} 
+                        style={{...styles.button, background: 'rgba(255,255,255,0.1)', fontSize: '0.8rem', padding: '8px 16px'}}
+                        title="Confirmar/Actualizar Inventario"
+                    >
+                        <FiRefreshCw className={loading ? 'spin' : ''} /> Actualizar Lista
+                    </button>
+                  </div>
+
                   <div style={styles.tableContainer}>
                     <table style={styles.table}>
                       <thead>
                         <tr>
-                          <th style={styles.th}>ID</th> {/* Agregado ID para debug visual */}
+                          <th style={styles.th}>ID</th> 
                           <th style={styles.th}><FiMail /> Email</th>
                           {salesType !== 'activacion' && (
                             <>
@@ -284,7 +323,7 @@ const StockManagement = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {stockItems.map(item => (
+                        {currentItems.map(item => (
                           <tr key={item.id}>
                             <td style={styles.td}><small style={{color:'#666'}}>#{item.id}</small></td>
                             <td style={styles.td}>{item.email}</td>
@@ -326,6 +365,32 @@ const StockManagement = () => {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* --- Controles de Paginación --- */}
+                  {stockItems.length > 0 && (
+                    <div style={styles.paginationContainer}>
+                        <button 
+                            onClick={goToPrevPage} 
+                            disabled={currentPage === 1}
+                            style={{...styles.pageButton, ...(currentPage === 1 ? styles.pageButtonDisabled : {})}}
+                        >
+                            <FiChevronLeft size={20} />
+                        </button>
+                        
+                        <span style={styles.pageInfo}>
+                            Página {currentPage} de {totalPages || 1}
+                        </span>
+
+                        <button 
+                            onClick={goToNextPage} 
+                            disabled={currentPage === totalPages}
+                            style={{...styles.pageButton, ...(currentPage === totalPages ? styles.pageButtonDisabled : {})}}
+                        >
+                            <FiChevronRight size={20} />
+                        </button>
+                    </div>
+                  )}
+
                 </div>
               </div>
             )}
